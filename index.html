@@ -1,0 +1,2651 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sổ Quản Lý Học Sinh — Dương Anh Tuấn Anh (Nhật Hạ)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: #F7F6F2;
+      color: #1B3B48;
+    }
+    @media print {
+      @page {
+        size: A4 portrait;
+        margin: 12mm 14mm;
+      }
+      body {
+        background-color: #ffffff !important;
+        color: #000000 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+      .no-print {
+        display: none !important;
+      }
+      .print-only {
+        display: block !important;
+      }
+      .page-break {
+        page-break-after: always;
+        break-after: page;
+      }
+      table {
+        border-collapse: collapse !important;
+        width: 100% !important;
+      }
+      th, td {
+        border: 1px solid #1B3B48 !important;
+      }
+    }
+  </style>
+</head>
+<body class="bg-[#F7F6F2] text-[#1B3B48]">
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useMemo } = React;
+
+    // ============================================================================
+    // CẤU HÌNH TÀI KHOẢN GIÁO VIÊN
+    // ============================================================================
+    const AUTH_CONFIG = {
+      teacherName: 'Dương Anh Tuấn Anh',
+      subNote: 'Nhật Hạ',
+      allowedAccounts: ['anhduonganhtuan@gmail.com', 'anduonganhtuan@gmail.com', 'duonganhtuananh'],
+      defaultPin: '123456'
+    };
+
+    // ============================================================================
+    // BỘ ICON SVG NỘI TUYẾN
+    // ============================================================================
+    const IconBase = ({ className = "w-4 h-4", children }) => (
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+        {children}
+      </svg>
+    );
+
+    const Users = (p) => <IconBase {...p}><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></IconBase>;
+    const Calendar = (p) => <IconBase {...p}><rect width="18" height="18" x="3" y="4" rx="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></IconBase>;
+    const BookOpen = (p) => <IconBase {...p}><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></IconBase>;
+    const FileText = (p) => <IconBase {...p}><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" x2="8" y1="13" y2="13"/><line x1="16" x2="8" y1="17" y2="17"/></IconBase>;
+    const Download = (p) => <IconBase {...p}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></IconBase>;
+    const Upload = (p) => <IconBase {...p}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></IconBase>;
+    const Plus = (p) => <IconBase {...p}><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="19" y1="12" y2="12"/></IconBase>;
+    const Trash2 = (p) => <IconBase {...p}><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></IconBase>;
+    const Check = (p) => <IconBase {...p}><polyline points="20 6 9 17 4 12"/></IconBase>;
+    const X = (p) => <IconBase {...p}><line x1="18" x2="6" y1="6" y2="18"/><line x1="6" x2="18" y1="6" y2="18"/></IconBase>;
+    const Search = (p) => <IconBase {...p}><circle cx="11" cy="11" r="8"/><line x1="21" x2="16.65" y1="21" y2="16.65"/></IconBase>;
+    const Printer = (p) => <IconBase {...p}><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect width="12" height="8" x="6" y="14"/></IconBase>;
+    const Settings = (p) => <IconBase {...p}><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></IconBase>;
+    const Award = (p) => <IconBase {...p}><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></IconBase>;
+    const AlertCircle = (p) => <IconBase {...p}><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></IconBase>;
+    const LayoutGrid = (p) => <IconBase {...p}><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></IconBase>;
+    const ClipboardCheck = (p) => <IconBase {...p}><rect width="8" height="4" x="8" y="2" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="m9 14 2 2 4-4"/></IconBase>;
+    const Sparkles = (p) => <IconBase {...p}><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></IconBase>;
+    const Lock = (p) => <IconBase {...p}><rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></IconBase>;
+    const LogOut = (p) => <IconBase {...p}><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></IconBase>;
+    const Phone = (p) => <IconBase {...p}><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></IconBase>;
+    const MessageCircle = (p) => <IconBase {...p}><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></IconBase>;
+    const Trophy = (p) => <IconBase {...p}><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></IconBase>;
+    const Wallet = (p) => <IconBase {...p}><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/></IconBase>;
+    const Clock = (p) => <IconBase {...p}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></IconBase>;
+
+    // ============================================================================
+    // DANH MỤC HẰNG SỐ & ĐỒNG BỘ THỜI GIAN THỰC TRÊN MÁY (CN TUẦN TRƯỚC -> T7)
+    // ============================================================================
+    const ROLES_LIST = [
+      'Thành viên', 'Lớp trưởng', 'Lớp phó học tập', 'Lớp phó kỷ luật',
+      'Lớp phó phong trào', 'Bí thư', 'Phó Bí thư',
+      'Tổ trưởng Tổ 1', 'Tổ trưởng Tổ 2', 'Tổ trưởng Tổ 3', 'Tổ trưởng Tổ 4',
+    ];
+
+    const ATTITUDES_LIST = [
+      'Rất tích cực', 'Tích cực', 'Chăm chỉ', 'Khá chú ý', 'Còn thụ động', 'Cần nhắc nhở',
+    ];
+
+    const STUDENT_STATUS_LIST = [
+      'Đang học', 'Bảo lưu', 'Chuyển lớp', 'Chuyển trường', 'Nghỉ học tạm thời', 'Thôi học',
+    ];
+
+    const VOCATIONAL_LIST = [
+      'Tin học ứng dụng', 'Điện công nghiệp', 'Công nghệ ô tô', 'Kế toán doanh nghiệp',
+      'Cơ khí chế tạo', 'Điện tử - Điện lạnh', 'Chăm sóc sắc đẹp', 'Kỹ thuật chế biến món ăn',
+      'Nghiệp vụ nhà hàng - KS', 'May thời trang', 'Thương mại điện tử', 'Chưa phân nghề',
+    ];
+
+    const TUITION_STATUS_LIST = [
+      'Đóng đủ học phí',
+      'Miễn 100% học phí nghề (Nghị định 81)',
+      'Giảm 70% học phí (Vùng khó khăn / Dân tộc)',
+      'Giảm 50% học phí (Con thương binh / Cận nghèo)',
+      'Chờ bổ sung giấy xác nhận miễn giảm',
+    ];
+
+    // Mỗi tuần bắt đầu từ Chủ nhật tuần trước đến Thứ 7 tuần này
+    const DAYS_OF_WEEK = [
+      { key: 'CN', label: 'Chủ nhật', short: 'CN', jsDay: 0 },
+      { key: 'T2', label: 'Thứ 2', short: 'T2', jsDay: 1 },
+      { key: 'T3', label: 'Thứ 3', short: 'T3', jsDay: 2 },
+      { key: 'T4', label: 'Thứ 4', short: 'T4', jsDay: 3 },
+      { key: 'T5', label: 'Thứ 5', short: 'T5', jsDay: 4 },
+      { key: 'T6', label: 'Thứ 6', short: 'T6', jsDay: 5 },
+      { key: 'T7', label: 'Thứ 7', short: 'T7', jsDay: 6 },
+    ];
+
+    const SESSIONS_OF_DAY = [
+      { key: 'S', label: 'Buổi Sáng', shortLabel: 'Sáng' },
+      { key: 'C', label: 'Buổi Chiều', shortLabel: 'Chiều' },
+    ];
+
+    const SEMESTER_WEEKS = {
+      'Học kỳ 1': Array.from({ length: 18 }, (_, i) => i + 1),
+      'Học kỳ 2': Array.from({ length: 17 }, (_, i) => i + 19),
+    };
+
+    const INITIAL_ATTENDANCE_TYPES = [
+      { id: 'P', label: 'Vắng có phép', points: -2, color: 'bg-amber-50 text-amber-800 border-amber-300' },
+      { id: 'K', label: 'Vắng không phép', points: -5, color: 'bg-red-50 text-red-800 border-red-300' },
+      { id: 'M', label: 'Đi học muộn', points: -2, color: 'bg-orange-50 text-orange-800 border-orange-300' },
+      { id: 'BT', label: 'Thiếu bài tập', points: -3, color: 'bg-rose-50 text-rose-800 border-rose-300' },
+      { id: 'TT', label: 'Mất trật tự', points: -2, color: 'bg-purple-50 text-purple-800 border-purple-300' },
+      { id: 'DD', label: 'Quên đồ dùng học tập', points: -1, color: 'bg-gray-100 text-gray-800 border-gray-300' },
+      { id: 'PB', label: 'Phát biểu xây dựng bài (+5đ)', points: 5, color: 'bg-emerald-50 text-emerald-800 border-emerald-300' },
+      { id: 'VT', label: 'Việc tốt / Giúp bạn (+5đ)', points: 5, color: 'bg-sky-50 text-sky-800 border-sky-300' },
+    ];
+
+    // ============================================================================
+    // HÀM ĐỒNG BỘ THỜI GIAN THỰC TRÊN MÁY (LẤY TUẦN THỰC TẾ TỪ CN ĐẾN THỨ 7)
+    // ============================================================================
+    const formatDDMM = (dateObj) => {
+      const dd = String(dateObj.getDate()).padStart(2, '0');
+      const mm = String(dateObj.getMonth() + 1).padStart(2, '0');
+      return `${dd}/${mm}`;
+    };
+
+    const formatDDMMYYYY = (dateObj) => {
+      return `${formatDDMM(dateObj)}/${dateObj.getFullYear()}`;
+    };
+
+    // Lấy Chủ nhật đầu tuần của một ngày bất kỳ (CN = 0 ... T7 = 6)
+    const getSundayOfWeek = (dateObj) => {
+      const d = new Date(dateObj);
+      d.setHours(0, 0, 0, 0);
+      const dayOfWeek = d.getDay(); // 0 = CN, 1 = T2 ... 6 = T7
+      d.setDate(d.getDate() - dayOfWeek);
+      return d;
+    };
+
+    // Tạo bộ 7 ngày (CN -> T7) từ một ngày Chủ nhật
+    const buildWeekDaysFromSunday = (sundayDate) => {
+      const days = {};
+      const fullDays = {};
+      DAYS_OF_WEEK.forEach((d, idx) => {
+        const dt = new Date(sundayDate);
+        dt.setDate(sundayDate.getDate() + idx);
+        days[d.key] = formatDDMM(dt);
+        fullDays[d.key] = formatDDMMYYYY(dt);
+      });
+      const satDate = new Date(sundayDate);
+      satDate.setDate(sundayDate.getDate() + 6);
+      return {
+        days,
+        fullDays,
+        dateRange: `${formatDDMMYYYY(sundayDate)} - ${formatDDMMYYYY(satDate)}`,
+      };
+    };
+
+    const computeDatesFromSundayInput = (sundayStr) => {
+      if (!sundayStr || !sundayStr.trim()) return {};
+      const parts = sundayStr.trim().split('/');
+      if (parts.length < 2) return {};
+      const d = parseInt(parts[0], 10);
+      const m = parseInt(parts[1], 10) - 1;
+      const y = parts[2] ? parseInt(parts[2], 10) : new Date().getFullYear();
+      const base = new Date(y, m, d);
+      if (isNaN(base.getTime())) return {};
+      return buildWeekDaysFromSunday(base).days;
+    };
+
+    // Tính số điểm tối thiểu cần đạt ở bài Kiểm tra Cuối kỳ (HS3) để đạt mục tiêu ĐTB (8.0 Giỏi / 6.5 Khá / 5.0 Đạt)
+    const predictRequiredFinalScore = (scoreObj, targetAvg) => {
+      if (!scoreObj) return null;
+      const txValues = ['tx1', 'tx2', 'tx3', 'tx4']
+        .map((k) => parseFloat(scoreObj[k]))
+        .filter((v) => !isNaN(v) && v >= 0 && v <= 10);
+      const gk = parseFloat(scoreObj.gk);
+      const hasGK = !isNaN(gk) && gk >= 0 && gk <= 10;
+
+      if (txValues.length === 0 && !hasGK) return null;
+
+      const currentSum = txValues.reduce((a, b) => a + b, 0) + (hasGK ? gk * 2 : 0);
+      const currentWeight = txValues.length + (hasGK ? 2 : 0);
+      const totalWeightWithCK = currentWeight + 3;
+      const requiredCK = (targetAvg * totalWeightWithCK - currentSum) / 3;
+      return Number(requiredCK.toFixed(1));
+    };
+
+    const calculateSubjectAverage = (scoreObj) => {
+      if (!scoreObj) return null;
+      const txValues = ['tx1', 'tx2', 'tx3', 'tx4']
+        .map((k) => parseFloat(scoreObj[k]))
+        .filter((v) => !isNaN(v) && v >= 0 && v <= 10);
+      const gk = parseFloat(scoreObj.gk);
+      const ck = parseFloat(scoreObj.ck);
+      const hasGK = !isNaN(gk) && gk >= 0 && gk <= 10;
+      const hasCK = !isNaN(ck) && ck >= 0 && ck <= 10;
+
+      if (txValues.length === 0 && !hasGK && !hasCK) return null;
+      let totalScore = txValues.reduce((a, b) => a + b, 0);
+      let totalWeight = txValues.length;
+      if (hasGK) { totalScore += gk * 2; totalWeight += 2; }
+      if (hasCK) { totalScore += ck * 3; totalWeight += 3; }
+      if (totalWeight === 0) return null;
+      return Number((totalScore / totalWeight).toFixed(1));
+    };
+
+    const buildDefaultArchive = () => {
+      const now = new Date();
+      const thisSunday = getSundayOfWeek(now);
+      const liveWeek = buildWeekDaysFromSunday(thisSunday);
+
+      return {
+        '2026 - 2027': {
+          homeroomClassId: '10A1',
+          classes: [
+            { id: '10A1', name: 'Lớp 10A1' },
+            { id: '10A2', name: 'Lớp 10A2' },
+            { id: '11B1', name: 'Lớp 11B1' },
+          ],
+          classSubjects: {
+            '10A1': ['Hóa học', 'Toán', 'Ngữ văn', 'Tiếng Anh', 'Vật lý', 'Sinh học', 'Lịch sử', 'Địa lý'],
+            '10A2': ['Hóa học', 'Toán', 'Ngữ văn', 'Tiếng Anh'],
+            '11B1': ['Hóa học', 'Toán', 'Vật lý', 'Sinh học'],
+          },
+          weekMeta: {
+            1: {
+              semester: 'Học kỳ 1',
+              dateRange: liveWeek.dateRange,
+              days: liveWeek.days,
+            },
+          },
+          studentsByClass: {
+            '10A1': [
+              {
+                id: 'HS001',
+                moetId: '072211001001',
+                name: 'Nguyễn Minh An',
+                dob: '12/11/2011',
+                gender: 'Nam',
+                status: 'Đang học',
+                vocational: 'Tin học ứng dụng',
+                tuitionStatus: 'Miễn 100% học phí nghề (Nghị định 81)',
+                tuitionDocDone: true,
+                role: 'Lớp trưởng',
+                attitude: 'Rất tích cực',
+                team: 1,
+                seat: 1,
+                deskSlot: '1-1-1',
+                studentPhone: '0912345001',
+                parentPhone: '0987654001',
+                specialNote: 'Cán bộ lớp năng nổ, hỗ trợ tốt các bạn yếu môn Hóa.',
+                gvcnComment: 'Có năng lực quản lý lớp tốt, gương mẫu trong mọi hoạt động và học tập đều các môn.',
+              },
+              {
+                id: 'HS002',
+                moetId: '072211001002',
+                name: 'Trần Bảo Ngọc',
+                dob: '24/08/2011',
+                gender: 'Nữ',
+                status: 'Đang học',
+                vocational: 'Kế toán doanh nghiệp',
+                tuitionStatus: 'Giảm 50% học phí (Con thương binh / Cận nghèo)',
+                tuitionDocDone: true,
+                role: 'Lớp phó học tập',
+                attitude: 'Rất tích cực',
+                team: 2,
+                seat: 2,
+                deskSlot: '2-1-1',
+                studentPhone: '0912345002',
+                parentPhone: '0987654002',
+                specialNote: '',
+                gvcnComment: 'Chăm chỉ, luôn hoàn thành xuất sắc nhiệm vụ học tập.',
+              },
+              {
+                id: 'HS003',
+                moetId: '072211001003',
+                name: 'Lê Hoàng Nam',
+                dob: '03/11/2011',
+                gender: 'Nam',
+                status: 'Đang học',
+                vocational: 'Điện công nghiệp',
+                tuitionStatus: 'Chờ bổ sung giấy xác nhận miễn giảm',
+                tuitionDocDone: false,
+                role: 'Tổ trưởng Tổ 3',
+                attitude: 'Tích cực',
+                team: 3,
+                seat: 3,
+                deskSlot: '3-1-1',
+                studentPhone: '0912345003',
+                parentPhone: '0987654003',
+                specialNote: 'Nhắc bổ sung giấy xác nhận hộ cận nghèo trước 20/11.',
+                gvcnComment: 'Tư duy môn tự nhiên nhạy bén, có tinh thần trách nhiệm cao.',
+              },
+              {
+                id: 'HS004',
+                moetId: '072211001004',
+                name: 'Vũ Đức Đạt',
+                dob: '15/11/2011',
+                gender: 'Nam',
+                status: 'Đang học',
+                vocational: 'Công nghệ ô tô',
+                tuitionStatus: 'Đóng đủ học phí',
+                tuitionDocDone: true,
+                role: 'Thành viên',
+                attitude: 'Cần nhắc nhở',
+                team: 4,
+                seat: 4,
+                deskSlot: '4-1-1',
+                studentPhone: '0912345004',
+                parentPhone: '0987654004',
+                specialNote: 'Nhà xa trường 12km, cần phối hợp PH nhắc giờ giấc buổi sáng.',
+                gvcnComment: 'Cần tập trung hơn trong giờ học và rèn thói quen làm bài tập về nhà.',
+              },
+            ],
+            '10A2': [],
+            '11B1': [],
+          },
+          grades: {
+            '10A1': {
+              'Học kỳ 1': {
+                'Hóa học': {
+                  HS001: { tx1: '9.0', tx2: '8.5', tx3: '9.0', tx4: '', gk: '8.5', ck: '', comment: 'Nắm chắc bản chất hóa học.' },
+                  HS002: { tx1: '9.5', tx2: '9.0', tx3: '9.5', tx4: '', gk: '9.0', ck: '', comment: 'Xuất sắc.' },
+                  HS003: { tx1: '7.5', tx2: '8.0', tx3: '', tx4: '', gk: '7.5', ck: '', comment: 'Có tiến bộ.' },
+                  HS004: { tx1: '5.5', tx2: '6.0', tx3: '', tx4: '', gk: '5.0', ck: '', comment: 'Cần ôn tập thêm trước thi cuối kỳ.' },
+                },
+              },
+            },
+          },
+          attendance: {},
+          checklistsByClass: {
+            '10A1': [
+              {
+                id: 'CL01',
+                title: 'Nộp Đề cương Ôn tập Hóa học Chương 1',
+                category: 'Bài tập bộ môn',
+                dueDate: '15/11/2026',
+                completedIds: ['HS001', 'HS002'],
+              },
+            ],
+          },
+          fundTransactionsByClass: {
+            '10A1': [
+              { id: 'F01', date: formatDDMMYYYY(now), type: 'IN', title: 'Thu quỹ lớp đầu năm (Đợt 1)', amount: 2000000, note: 'Thủ quỹ lớp giữ' },
+              { id: 'F02', date: formatDDMMYYYY(now), type: 'OUT', title: 'In phiếu bài tập & tài liệu ôn thi', amount: 350000, note: 'Có hóa đơn photo' },
+            ],
+          },
+          lessonLogsByClass: {
+            '10A1': [
+              {
+                id: 'L01',
+                date: formatDDMMYYYY(now),
+                dayOfWeek: DAYS_OF_WEEK[now.getDay()].label,
+                period: 'Tiết 1 - 2 (Sáng)',
+                subject: 'Hóa học',
+                lessonTitle: 'Chương 3: Liên kết ion và Liên kết cộng hóa trị',
+                absentNames: 'Không có',
+                classRating: 'Tốt (10/10)',
+                teacherNote: 'Lớp hăng hái phát biểu, hoàn thành phiếu học tập.',
+              },
+            ],
+          },
+          parentMessagesByClass: { '10A1': [] },
+          leaveRequestsByClass: { '10A1': [] },
+          dutyRosterByClass: {
+            '10A1': {
+              CN: 'Nghỉ cuối tuần / Trực online nhóm lớp',
+              T2: 'Tổ 1 (Quét lớp, lau bảng, kiểm tra sĩ số)',
+              T3: 'Tổ 2 (Quét lớp, tưới cây, tắt điện cuối buổi)',
+              T4: 'Tổ 3 (Quét lớp, lau bảng, kê ngay ngắn bàn ghế)',
+              T5: 'Tổ 4 (Quét lớp, thu gom rác, kiểm tra đồng phục)',
+              T6: 'Tổ 1 & Tổ 2 (Tổng vệ sinh cuối tuần)',
+              T7: 'Tổ 3 & Tổ 4 (Trực sinh hoạt lớp & dọn phòng thực hành)',
+            },
+          },
+        },
+      };
+    };
+
+    // ============================================================================
+    // CƠ CHẾ LƯU TRỮ DỮ LIỆU
+    // ============================================================================
+    const STORAGE_KEY = 'gv_student_app_v8_complete';
+
+    const loadSavedStateSync = () => {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return null;
+        const parsed = JSON.parse(raw);
+        if (parsed && typeof parsed === 'object' && parsed.archiveByYear) return parsed;
+      } catch (e) {}
+      return null;
+    };
+
+    function App() {
+      const initialSaved = useMemo(() => loadSavedStateSync(), []);
+
+      // ĐỒNG HỒ THỜI GIAN THỰC TRÊN MÁY (CẬP NHẬT TỪNG GIÂY)
+      const [liveClock, setLiveClock] = useState(() => new Date());
+      useEffect(() => {
+        const timer = setInterval(() => setLiveClock(new Date()), 1000);
+        return () => clearInterval(timer);
+      }, []);
+
+      const todayDDMM = formatDDMM(liveClock);
+      const todayFullStr = formatDDMMYYYY(liveClock);
+      const todayDayObj = DAYS_OF_WEEK[liveClock.getDay()]; // 0=CN -> 6=T7
+      const currentMonthNum = liveClock.getMonth() + 1;
+
+      // Trạng thái Đăng nhập Giáo viên
+      const [isAuthenticated, setIsAuthenticated] = useState(
+        () => sessionStorage.getItem('gv_portal_auth') === 'true'
+      );
+      const [teacherPin, setTeacherPin] = useState(
+        () => initialSaved?.teacherPin || AUTH_CONFIG.defaultPin
+      );
+      const [loginAccountInput, setLoginAccountInput] = useState('');
+      const [loginPinInput, setLoginPinInput] = useState('');
+      const [loginError, setLoginError] = useState('');
+      const [newPinSetting, setNewPinSetting] = useState('');
+
+      const [schoolName, setSchoolName] = useState(
+        () => initialSaved?.schoolName || 'Trường THPT & Trung Cấp Chuyên Nghiệp'
+      );
+      const [semester, setSemester] = useState(() => initialSaved?.semester || 'Học kỳ 1');
+      const [teacherName, setTeacherName] = useState(
+        () => initialSaved?.teacherName || AUTH_CONFIG.teacherName
+      );
+      const [mainSubject, setMainSubject] = useState(() => initialSaved?.mainSubject || 'Hóa học');
+      const [schoolYear, setSchoolYear] = useState(() => initialSaved?.schoolYear || '2026 - 2027');
+      const [archiveByYear, setArchiveByYear] = useState(
+        () => initialSaved?.archiveByYear || buildDefaultArchive()
+      );
+      const [attendanceTypes, setAttendanceTypes] = useState(
+        () => initialSaved?.attendanceTypes || INITIAL_ATTENDANCE_TYPES
+      );
+      const [seatLayoutConfig, setSeatLayoutConfig] = useState(
+        () => initialSaved?.seatLayoutConfig || { cols: 4, desksPerCol: 5, seatsPerDesk: 2 }
+      );
+
+      const currentYearData = useMemo(() => {
+        const years = Object.keys(archiveByYear);
+        return archiveByYear[schoolYear] || archiveByYear[years[0]] || buildDefaultArchive()['2026 - 2027'];
+      }, [archiveByYear, schoolYear]);
+
+      const homeroomClassId = currentYearData.homeroomClassId || '';
+      const classes = currentYearData.classes || [];
+      const studentsByClass = currentYearData.studentsByClass || {};
+      const classSubjects = currentYearData.classSubjects || {};
+      const grades = currentYearData.grades || {};
+      const attendance = currentYearData.attendance || {};
+      const checklistsByClass = currentYearData.checklistsByClass || {};
+      const weekMeta = currentYearData.weekMeta || {};
+      const fundTransactionsByClass = currentYearData.fundTransactionsByClass || {};
+      const lessonLogsByClass = currentYearData.lessonLogsByClass || {};
+      const parentMessagesByClass = currentYearData.parentMessagesByClass || {};
+      const leaveRequestsByClass = currentYearData.leaveRequestsByClass || {};
+      const dutyRosterByClass = currentYearData.dutyRosterByClass || {};
+
+      const [activeClass, setActiveClass] = useState(() => classes[0]?.id || '10A1');
+      const [activeTab, setActiveTab] = useState('HOSO');
+      const [selectedWeek, setSelectedWeek] = useState(1);
+      const [selectedSubject, setSelectedSubject] = useState('Hóa học');
+      const [searchQuery, setSearchQuery] = useState('');
+      const [summaryPeriodMode, setSummaryPeriodMode] = useState('WHOLE_YEAR');
+
+      const updateYearField = (field, updater) => {
+        setArchiveByYear((prev) => {
+          const curr = prev[schoolYear] || buildDefaultArchive()['2026 - 2027'];
+          const nextVal = typeof updater === 'function' ? updater(curr[field]) : updater;
+          return {
+            ...prev,
+            [schoolYear]: { ...curr, [field]: nextVal },
+          };
+        });
+      };
+
+      const setHomeroomClassId = (val) => updateYearField('homeroomClassId', val);
+      const setClasses = (val) => updateYearField('classes', val);
+      const setStudentsByClass = (val) => updateYearField('studentsByClass', val);
+      const setClassSubjects = (val) => updateYearField('classSubjects', val);
+      const setGrades = (val) => updateYearField('grades', val);
+      const setAttendance = (val) => updateYearField('attendance', val);
+      const setChecklistsByClass = (val) => updateYearField('checklistsByClass', val);
+      const setWeekMeta = (val) => updateYearField('weekMeta', val);
+      const setFundTransactionsByClass = (val) => updateYearField('fundTransactionsByClass', val);
+      const setLessonLogsByClass = (val) => updateYearField('lessonLogsByClass', val);
+      const setParentMessagesByClass = (val) => updateYearField('parentMessagesByClass', val);
+      const setLeaveRequestsByClass = (val) => updateYearField('leaveRequestsByClass', val);
+      const setDutyRosterByClass = (val) => updateYearField('dutyRosterByClass', val);
+
+      // Đồng bộ tự động ngày tháng thực trên máy cho tuần đang chọn nếu tuần đó chưa có ngày
+      const currentWeekInfo = useMemo(() => {
+        if (weekMeta[selectedWeek] && weekMeta[selectedWeek].days) {
+          return weekMeta[selectedWeek];
+        }
+        const liveWeek = buildWeekDaysFromSunday(getSundayOfWeek(new Date()));
+        return {
+          dateRange: liveWeek.dateRange,
+          days: liveWeek.days,
+        };
+      }, [weekMeta, selectedWeek]);
+
+      // Nút đồng bộ nhanh Tuần đang chọn về đúng Tuần Thực Tế Hôm Nay trên máy
+      const handleSyncWeekToRealTimeToday = () => {
+        const liveWeek = buildWeekDaysFromSunday(getSundayOfWeek(new Date()));
+        setWeekMeta((prev) => ({
+          ...(prev || {}),
+          [selectedWeek]: {
+            semester,
+            dateRange: liveWeek.dateRange,
+            days: liveWeek.days,
+          },
+        }));
+        showToast(`Đã đồng bộ Tuần ${selectedWeek} khớp với lịch thực trên máy (${liveWeek.dateRange})!`);
+      };
+
+      const handleUpdateWeekDayDate = (dayKey, dateText) => {
+        setWeekMeta((prev) => {
+          const wObj = prev?.[selectedWeek] || { dateRange: currentWeekInfo.dateRange, days: { ...currentWeekInfo.days } };
+          const nextDays = { ...(wObj.days || {}), [dayKey]: dateText };
+          if (dayKey === 'CN' && dateText.includes('/')) {
+            const autoDays = computeDatesFromSundayInput(dateText);
+            if (Object.keys(autoDays).length === 7) {
+              Object.assign(nextDays, autoDays);
+            }
+          }
+          const rangeText =
+            nextDays.CN && nextDays.T7 ? `${nextDays.CN} - ${nextDays.T7}` : wObj.dateRange;
+          return {
+            ...(prev || {}),
+            [selectedWeek]: { ...wObj, dateRange: rangeText, days: nextDays },
+          };
+        });
+      };
+
+      const handleSwitchSemester = (targetSem) => {
+        setSemester(targetSem);
+        const semWeeks = SEMESTER_WEEKS[targetSem] || [1];
+        if (!semWeeks.includes(selectedWeek)) {
+          setSelectedWeek(semWeeks[0]);
+        }
+      };
+
+      // Lưu tự động vào localStorage
+      useEffect(() => {
+        const payload = {
+          schoolName, semester, teacherName, mainSubject, schoolYear, teacherPin,
+          archiveByYear, attendanceTypes, seatLayoutConfig, updatedAt: Date.now(),
+        };
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(payload)); } catch (e) {}
+      }, [schoolName, semester, teacherName, mainSubject, schoolYear, teacherPin, archiveByYear, attendanceTypes, seatLayoutConfig]);
+
+      const [toastMsg, setToastMsg] = useState(null);
+      const showToast = (msg) => {
+        setToastMsg(msg);
+        setTimeout(() => setToastMsg(null), 3200);
+      };
+
+      const [isEditingProfile, setIsEditingProfile] = useState(false);
+      const [newClassModalOpen, setNewClassModalOpen] = useState(false);
+      const [newClassName, setNewClassName] = useState('');
+      const [newSubjectName, setNewSubjectName] = useState('');
+      const [studentModal, setStudentModal] = useState(null);
+      const [excelImportModalOpen, setExcelImportModalOpen] = useState(false);
+      const [excelPasteText, setExcelPasteText] = useState('');
+      const [attendanceModal, setAttendanceModal] = useState(null);
+      const [printReportTarget, setPrintReportTarget] = useState(null);
+      const [printReportType, setPrintReportType] = useState('CONDUCT_WEEKLY');
+
+      // Form Quỹ lớp (Thu / Chi)
+      const [fundForm, setFundForm] = useState({ type: 'IN', title: '', amount: '', note: '' });
+
+      // Form Sổ đầu bài tiết dạy
+      const [lessonForm, setLessonForm] = useState({
+        date: formatDDMMYYYY(new Date()),
+        period: 'Tiết 1 - 2 (Sáng)',
+        subject: 'Hóa học',
+        lessonTitle: '',
+        absentNames: 'Không có',
+        classRating: 'Tốt (10/10)',
+        teacherNote: '',
+      });
+
+      // Form Sổ liên lạc & Đơn xin phép PH
+      const [selectedContactStuId, setSelectedContactStuId] = useState('');
+      const [msgScenario, setMsgScenario] = useState('WEEKLY_REPORT');
+      const [msgCustomText, setMsgCustomText] = useState('');
+      const [leaveForm, setLeaveForm] = useState({ studentId: '', dayKey: 'T2', sessionKey: 'S', reason: '' });
+
+      // Bộ lọc Biểu đồ Vi phạm & Chấm nhanh theo Tổ
+      const [violationScope, setViolationScope] = useState('WEEK'); // 'WEEK' | 'YEAR'
+      const [batchTeam, setBatchTeam] = useState(1);
+      const [batchDay, setBatchDay] = useState(todayDayObj.key);
+      const [batchSession, setBatchSession] = useState('S');
+      const [batchCode, setBatchCode] = useState('PB');
+
+      const [randomPickerOpen, setRandomPickerOpen] = useState(false);
+      const [pickedStudent, setPickedStudent] = useState(null);
+
+      const isHomeroomTeacher = activeClass === homeroomClassId;
+      const currentClassObj = classes.find((c) => c.id === activeClass) || { id: activeClass, name: activeClass };
+      const currentStudents = studentsByClass[activeClass] || [];
+      const currentSubjects = classSubjects[activeClass] || [mainSubject];
+      const currentChecklists = checklistsByClass[activeClass] || [];
+      const currentFunds = fundTransactionsByClass[activeClass] || [];
+      const currentLessons = lessonLogsByClass[activeClass] || [];
+      const currentMessages = parentMessagesByClass[activeClass] || [];
+      const currentLeaves = leaveRequestsByClass[activeClass] || [];
+      const currentDuty = dutyRosterByClass[activeClass] || {};
+
+      useEffect(() => {
+        if (currentStudents.length > 0 && !currentStudents.some(s => s.id === selectedContactStuId)) {
+          setSelectedContactStuId(currentStudents[0].id);
+        }
+      }, [activeClass, currentStudents]);
+
+      const filteredStudents = useMemo(() => {
+        const q = searchQuery.trim().toLowerCase();
+        if (!q) return currentStudents;
+        return currentStudents.filter(
+          (s) =>
+            s.name.toLowerCase().includes(q) ||
+            (s.moetId || s.id || '').toLowerCase().includes(q) ||
+            (s.vocational || '').toLowerCase().includes(q) ||
+            (s.tuitionStatus || '').toLowerCase().includes(q)
+        );
+      }, [currentStudents, searchQuery]);
+
+      // ============================================================================
+      // TÍNH TOÁN CHUYÊN CẦN, THI ĐUA 4 TỔ & BIỂU ĐỒ VI PHẠM
+      // ============================================================================
+      const getStudentWeekRecord = (stuId, weekNum = selectedWeek) => {
+        return attendance[activeClass]?.[weekNum]?.[stuId] || {};
+      };
+
+      const getStudentDaySessionCodes = (stuId, dayKey, sessionKey = 'S', weekNum = selectedWeek) => {
+        const rec = getStudentWeekRecord(stuId, weekNum);
+        const sessionField = `${dayKey}_${sessionKey}`;
+        if (Array.isArray(rec[sessionField])) return rec[sessionField];
+        if (sessionKey === 'S' && Array.isArray(rec[dayKey])) return rec[dayKey];
+        return [];
+      };
+
+      const calculateWeeklyConductScore = (stuId, weekNum = selectedWeek) => {
+        let score = 100;
+        let totalAbsentP = 0, totalAbsentK = 0, totalLate = 0, totalPlus = 0, violationCount = 0;
+
+        DAYS_OF_WEEK.forEach((d) => {
+          SESSIONS_OF_DAY.forEach((ses) => {
+            const codes = getStudentDaySessionCodes(stuId, d.key, ses.key, weekNum);
+            codes.forEach((code) => {
+              const typeObj = attendanceTypes.find((t) => t.id === code);
+              if (typeObj) {
+                score += Number(typeObj.points || 0);
+                if (typeObj.points < 0) violationCount += 1;
+                if (code === 'P') totalAbsentP += 1;
+                if (code === 'K') totalAbsentK += 1;
+                if (code === 'M') totalLate += 1;
+                if (typeObj.points > 0) totalPlus += 1;
+              }
+            });
+          });
+        });
+
+        const clamped = Math.max(0, Math.min(120, score));
+        let rank = 'Tốt';
+        if (clamped < 65 || totalAbsentK >= 2) rank = 'Chưa đạt';
+        else if (clamped < 80) rank = 'Đạt';
+        else if (clamped < 90) rank = 'Khá';
+
+        return { score: clamped, rank, totalAbsentP, totalAbsentK, totalLate, totalPlus, violationCount };
+      };
+
+      const calculateYearAttendanceSummary = (stuId) => {
+        const classAtt = attendance[activeClass] || {};
+        let absentP = 0, absentK = 0, late = 0, plusCount = 0, totalScoreSum = 0, trackedWeeks = 0, totalViolations = 0;
+
+        Object.keys(classAtt).forEach((wKey) => {
+          const wSummary = calculateWeeklyConductScore(stuId, Number(wKey));
+          absentP += wSummary.totalAbsentP;
+          absentK += wSummary.totalAbsentK;
+          late += wSummary.totalLate;
+          plusCount += wSummary.totalPlus;
+          totalViolations += wSummary.violationCount;
+          totalScoreSum += wSummary.score;
+          trackedWeeks += 1;
+        });
+
+        const avgConductScore = trackedWeeks > 0 ? Math.round(totalScoreSum / trackedWeeks) : 100;
+        let yearConductRank = 'Tốt';
+        if (avgConductScore < 65 || absentK >= 5) yearConductRank = 'Chưa đạt';
+        else if (avgConductScore < 80) yearConductRank = 'Đạt';
+        else if (avgConductScore < 90) yearConductRank = 'Khá';
+
+        return { absentP, absentK, late, plusCount, avgConductScore, yearConductRank, totalViolations };
+      };
+
+      // TÍNH TOÁN BẢNG XẾP HẠNG THI ĐUA 4 TỔ TỰ ĐỘNG
+      const teamCompetitionRanking = useMemo(() => {
+        return [1, 2, 3, 4]
+          .map((teamNum) => {
+            const members = currentStudents.filter((s) => Number(s.team || 1) === teamNum);
+            if (members.length === 0) {
+              return { teamNum, memberCount: 0, avgConduct: 100, plusTotal: 0, violationTotal: 0, totalPoints: 100 };
+            }
+            let sumConduct = 0, plusTotal = 0, violationTotal = 0;
+            members.forEach((m) => {
+              const w = calculateWeeklyConductScore(m.id, selectedWeek);
+              sumConduct += w.score;
+              plusTotal += w.totalPlus;
+              violationTotal += w.violationCount;
+            });
+            const avgConduct = Number((sumConduct / members.length).toFixed(1));
+            return {
+              teamNum,
+              memberCount: members.length,
+              avgConduct,
+              plusTotal,
+              violationTotal,
+              totalPoints: avgConduct,
+            };
+          })
+          .sort((a, b) => b.totalPoints - a.totalPoints);
+      }, [currentStudents, attendance, selectedWeek, activeClass]);
+
+      // DỮ LIỆU BIỂU ĐỒ HỌC SINH VI PHẠM NHIỀU
+      const violationChartData = useMemo(() => {
+        const list = currentStudents.map((stu) => {
+          if (violationScope === 'WEEK') {
+            const w = calculateWeeklyConductScore(stu.id, selectedWeek);
+            return {
+              ...stu,
+              count: w.violationCount,
+              score: w.score,
+              detail: `Vắng ${w.totalAbsentP}P/${w.totalAbsentK}K • Muộn ${w.totalLate}`,
+            };
+          } else {
+            const y = calculateYearAttendanceSummary(stu.id);
+            return {
+              ...stu,
+              count: y.totalViolations,
+              score: y.avgConductScore,
+              detail: `Lũy kế năm: Vắng ${y.absentP}P/${y.absentK}K • Muộn ${y.late}`,
+            };
+          }
+        });
+        return list.filter((x) => x.count > 0 || x.score < 95).sort((a, b) => b.count - a.count || a.score - b.score);
+      }, [currentStudents, attendance, selectedWeek, violationScope, activeClass]);
+
+      // Mật độ vi phạm theo 7 ngày trong tuần (CN -> T7)
+      const dayDensityStats = useMemo(() => {
+        return DAYS_OF_WEEK.map((d) => {
+          let errCount = 0;
+          currentStudents.forEach((stu) => {
+            SESSIONS_OF_DAY.forEach((ses) => {
+              const codes = getStudentDaySessionCodes(stu.id, d.key, ses.key, selectedWeek);
+              codes.forEach((c) => {
+                const t = attendanceTypes.find((x) => x.id === c);
+                if (t && t.points < 0) errCount += 1;
+              });
+            });
+          });
+          return { ...d, errCount };
+        });
+      }, [currentStudents, attendance, selectedWeek, activeClass]);
+
+      // ============================================================================
+      // TÍNH TOÁN ĐIỂM SỐ & HỌC BỔNG / MIỄN GIẢM HỌC PHÍ
+      // ============================================================================
+      const getStudentSubjectScoreObj = (stuId, subj = selectedSubject, sem = semester) => {
+        return grades[activeClass]?.[sem]?.[subj]?.[stuId] || { tx1: '', tx2: '', tx3: '', tx4: '', gk: '', ck: '', comment: '' };
+      };
+
+      const getSubjectWholeYearAvg = (stuId, subj) => {
+        const hk1 = calculateSubjectAverage(getStudentSubjectScoreObj(stuId, subj, 'Học kỳ 1'));
+        const hk2 = calculateSubjectAverage(getStudentSubjectScoreObj(stuId, subj, 'Học kỳ 2'));
+        if (hk1 !== null && hk2 !== null) return Number(((hk1 + hk2 * 2) / 3).toFixed(1));
+        if (hk1 !== null) return hk1;
+        if (hk2 !== null) return hk2;
+        return null;
+      };
+
+      const getStudentOverallGPA = (stuId, mode = summaryPeriodMode) => {
+        const validScores = currentSubjects
+          .map((subj) =>
+            mode === 'WHOLE_YEAR'
+              ? getSubjectWholeYearAvg(stuId, subj)
+              : calculateSubjectAverage(getStudentSubjectScoreObj(stuId, subj, semester))
+          )
+          .filter((v) => v !== null);
+        if (validScores.length === 0) return null;
+        return Number((validScores.reduce((a, b) => a + b, 0) / validScores.length).toFixed(1));
+      };
+
+      const getHonorTitle = (gpa, conductRank) => {
+        if (gpa === null) return 'Chưa xét';
+        if (gpa >= 9.0 && conductRank === 'Tốt') return 'Học sinh Xuất sắc';
+        if (gpa >= 8.0 && conductRank === 'Tốt') return 'Học sinh Giỏi';
+        if (gpa >= 6.5 && (conductRank === 'Tốt' || conductRank === 'Khá')) return 'Học sinh Tiên tiến';
+        return 'Hoàn thành';
+      };
+
+      // ============================================================================
+      // THAO TÁC NGHIỆP VỤ
+      // ============================================================================
+      const handleTeacherLogin = (e) => {
+        e.preventDefault();
+        setLoginError('');
+        const acc = loginAccountInput.trim().toLowerCase();
+        const pin = loginPinInput.trim();
+        if ((AUTH_CONFIG.allowedAccounts.includes(acc) || acc === teacherName.toLowerCase()) && pin === teacherPin) {
+          setIsAuthenticated(true);
+          sessionStorage.setItem('gv_portal_auth', 'true');
+          setLoginPinInput('');
+          showToast(`Xin chào Thầy ${teacherName}.`);
+        } else {
+          setLoginError('Tài khoản Email hoặc Mã đăng nhập Giáo viên không chính xác.');
+        }
+      };
+
+      const handleUpdateStudentFieldInline = (stuId, field, value) => {
+        setStudentsByClass((prev) => ({
+          ...prev,
+          [activeClass]: (prev[activeClass] || []).map((s) => (s.id === stuId ? { ...s, [field]: value } : s)),
+        }));
+      };
+
+      const toggleAttendanceCode = (stuId, dayKey, codeId, sessionKey = 'S') => {
+        setAttendance((prev) => {
+          const classAtt = prev[activeClass] || {};
+          const weekAtt = classAtt[selectedWeek] || {};
+          const stuAtt = { ...(weekAtt[stuId] || {}) };
+          const sessionField = `${dayKey}_${sessionKey}`;
+          let currentCodes = Array.isArray(stuAtt[sessionField]) ? stuAtt[sessionField] : [];
+          const exists = currentCodes.includes(codeId);
+          stuAtt[sessionField] = exists ? currentCodes.filter((c) => c !== codeId) : [...currentCodes, codeId];
+          return {
+            ...prev,
+            [activeClass]: { ...classAtt, [selectedWeek]: { ...weekAtt, [stuId]: stuAtt } },
+          };
+        });
+      };
+
+      // Chấm chuyên cần / Cộng điểm nhanh hàng loạt theo Tổ
+      const handleBatchTeamAttendance = () => {
+        const teamMembers = currentStudents.filter((s) => Number(s.team || 1) === Number(batchTeam));
+        if (teamMembers.length === 0) {
+          showToast(`Tổ ${batchTeam} hiện chưa có thành viên nào.`);
+          return;
+        }
+        teamMembers.forEach((stu) => {
+          const curCodes = getStudentDaySessionCodes(stu.id, batchDay, batchSession, selectedWeek);
+          if (!curCodes.includes(batchCode)) {
+            toggleAttendanceCode(stu.id, batchDay, batchCode, batchSession);
+          }
+        });
+        showToast(`Đã ghi nhận mã [${batchCode}] cho toàn bộ ${teamMembers.length} HS Tổ ${batchTeam}!`);
+      };
+
+      const handleGradeChange = (stuId, field, value) => {
+        setGrades((prev) => {
+          const classGrades = prev[activeClass] || {};
+          const semGrades = classGrades[semester] || {};
+          const subjGrades = semGrades[selectedSubject] || {};
+          const stuGrades = subjGrades[stuId] || { tx1: '', tx2: '', tx3: '', tx4: '', gk: '', ck: '', comment: '' };
+          return {
+            ...prev,
+            [activeClass]: {
+              ...classGrades,
+              [semester]: {
+                ...semGrades,
+                [selectedSubject]: { ...subjGrades, [stuId]: { ...stuGrades, [field]: value } },
+              },
+            },
+          };
+        });
+      };
+
+      // Tạo tin nhắn Zalo tự động cho Phụ huynh
+      const buildParentZaloTemplate = (stu, scenario) => {
+        if (!stu) return '';
+        const wCond = calculateWeeklyConductScore(stu.id, selectedWeek);
+        const yCond = calculateYearAttendanceSummary(stu.id);
+        const gpa = getStudentOverallGPA(stu.id, summaryPeriodMode);
+        const wDate = currentWeekInfo.dateRange ? ` (${currentWeekInfo.dateRange})` : '';
+
+        if (scenario === 'VIOLATION_ALERT') {
+          return `Kính gửi Phụ huynh em ${stu.name} (${currentClassObj.name}): Trong Tuần ${selectedWeek}${wDate}, em có ${wCond.violationCount} lượt vi phạm/đi muộn/vắng (Điểm rèn luyện tuần: ${wCond.score}/100đ). Rất mong gia đình phối hợp cùng GVCN nhắc nhở em khắc phục. Trân trọng, GV ${teacherName}.`;
+        }
+        if (scenario === 'PRAISE_HONOR') {
+          return `Kính gửi Phụ huynh em ${stu.name} (${currentClassObj.name}): GVCN xin biểu dương em đã có thành tích học tập và rèn luyện xuất sắc trong Tuần ${selectedWeek}${wDate} (Điểm chuyên cần: ${wCond.score}đ, ĐTB: ${gpa ?? '--'}). Mong gia đình tiếp tục khích lệ em! Trân trọng, GV ${teacherName}.`;
+        }
+        if (scenario === 'TUITION_REMINDER') {
+          return `Kính gửi Phụ huynh em ${stu.name} (${currentClassObj.name}): Hồ sơ chế độ miễn/giảm học phí nghề của em hiện ở trạng thái "${stu.tuitionStatus || 'Đang cập nhật'}". Kính đề nghị Phụ huynh hoàn thiện giấy tờ nộp về văn phòng lớp đúng hạn. Trân trọng, GV ${teacherName}.`;
+        }
+        return `Kính gửi Phụ huynh em ${stu.name} (${currentClassObj.name}): Báo cáo Tuần ${selectedWeek}${wDate} (${semester}) — Chuyên cần: ${wCond.score}/100đ (${wCond.rank}, lũy kế vắng ${yCond.absentP}P/${yCond.absentK}K); ĐTB các môn: ${gpa ?? '--'}. Nhận xét: ${stu.gvcnComment || 'Học tập nghiêm túc.'} Trân trọng, GV ${teacherName}.`;
+      };
+
+      const handleCopyAndOpenZalo = (stu, customText = null) => {
+        const text = customText || buildParentZaloTemplate(stu, msgScenario);
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text);
+        }
+        const logEntry = {
+          id: 'MSG' + Date.now(),
+          date: `${todayFullStr} ${liveClock.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}`,
+          studentName: stu.name,
+          parentPhone: stu.parentPhone || 'Chưa có SĐT',
+          content: text,
+        };
+        setParentMessagesByClass((prev) => ({
+          ...prev,
+          [activeClass]: [logEntry, ...(prev[activeClass] || [])],
+        }));
+        const cleanPhone = (stu.parentPhone || '').replace(/\D/g, '');
+        if (cleanPhone) {
+          window.open(`https://zalo.me/${cleanPhone}`, '_blank');
+        }
+        showToast(`Đã copy tin nhắn & lưu nhật ký liên hệ Phụ huynh em ${stu.name}!`);
+      };
+
+      const triggerPrintPDF = (target, type = 'CONDUCT_WEEKLY') => {
+        setPrintReportTarget(target);
+        setPrintReportType(type);
+        setTimeout(() => window.print(), 250);
+      };
+
+      const studentsToPrint = useMemo(() => {
+        if (!printReportTarget || printReportTarget === 'ALL' || printReportTarget === 'SEATING_CHART') {
+          return currentStudents;
+        }
+        return [printReportTarget];
+      }, [printReportTarget, currentStudents]);
+
+      // Tính tổng Thu / Chi / Tồn Quỹ lớp
+      const fundSummary = useMemo(() => {
+        let totalIn = 0, totalOut = 0;
+        currentFunds.forEach((f) => {
+          if (f.type === 'IN') totalIn += Number(f.amount || 0);
+          else totalOut += Number(f.amount || 0);
+        });
+        return { totalIn, totalOut, balance: totalIn - totalOut };
+      }, [currentFunds]);
+
+      // Danh sách học sinh sinh nhật trong tháng hiện tại trên máy
+      const birthdayStudentsThisMonth = useMemo(() => {
+        return currentStudents.filter((s) => {
+          if (!s.dob || !s.dob.includes('/')) return false;
+          const m = parseInt(s.dob.split('/')[1], 10);
+          return m === currentMonthNum;
+        });
+      }, [currentStudents, currentMonthNum]);
+
+      // ==========================================================================
+      // MÀN HÌNH ĐĂNG NHẬP GIÁO VIÊN
+      // ==========================================================================
+      if (!isAuthenticated) {
+        return (
+          <div className="min-h-screen bg-[#F7F6F2] text-[#1B3B48] flex flex-col justify-between">
+            <header className="bg-[#1B3B48] text-[#F7F6F2] py-4 px-6 border-b border-[#5C7667]/40">
+              <div className="max-w-5xl mx-auto flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-[#5C7667] flex items-center justify-center font-extrabold text-sm text-white">
+                    SỔ GV
+                  </div>
+                  <div>
+                    <h1 className="text-lg sm:text-xl font-bold text-white">{teacherName}</h1>
+                    <p className="text-xs text-[#D8E2DC]">{AUTH_CONFIG.subNote} • Sổ Quản Lý Học Sinh</p>
+                  </div>
+                </div>
+                <div className="text-xs text-[#E9C46A] font-mono font-bold">
+                  🕒 {liveClock.toLocaleTimeString('vi-VN')} • {todayDayObj.label}, {todayFullStr}
+                </div>
+              </div>
+            </header>
+
+            <main className="flex-1 flex items-center justify-center p-4 sm:p-6">
+              <div className="max-w-4xl w-full grid grid-cols-1 lg:grid-cols-12 bg-white rounded-3xl border border-[#E2DFD7] shadow-lg overflow-hidden">
+                <div className="lg:col-span-6 p-8 bg-[#EFECE6] flex flex-col justify-between space-y-6">
+                  <div className="space-y-4">
+                    <span className="inline-block px-3 py-1 rounded-full bg-[#1B3B48] text-white text-xs font-bold uppercase">
+                      Cổng Quản Trị Lớp Học
+                    </span>
+                    <h2 className="text-2xl sm:text-3xl font-extrabold text-[#1B3B48] leading-snug">
+                      Quản lý Toàn diện,
+                      <br />
+                      Đồng bộ Thời gian thực.
+                    </h2>
+                    <p className="text-xs sm:text-sm text-[#4A5A62] leading-relaxed">
+                      Tích hợp Thi đua 4 Tổ, Sổ thu chi quỹ lớp, Dự báo điểm cuối kỳ, Hồ sơ miễn giảm học phí nghề, Sổ đầu bài tiết dạy và In Giấy biểu dương PDF A4.
+                    </p>
+                  </div>
+                  <div className="text-xs text-[#5C7667] border-t border-[#DFDBD0] pt-4">
+                    Lịch thực trên máy: <strong className="text-[#1B3B48]">{todayDayObj.label}, ngày {todayFullStr}</strong>
+                  </div>
+                </div>
+
+                <div className="lg:col-span-6 p-8 bg-[#1B3B48] text-[#F7F6F2] flex flex-col justify-center space-y-5">
+                  <div>
+                    <span className="text-xs font-bold uppercase tracking-widest text-[#E9C46A]">Xác thực Giáo viên</span>
+                    <h3 className="text-2xl font-bold text-white mt-1">Đăng nhập Hệ thống</h3>
+                  </div>
+                  <form onSubmit={handleTeacherLogin} className="space-y-4">
+                    <div>
+                      <label className="block text-xs font-semibold mb-1 text-gray-200">Email Giáo viên</label>
+                      <input
+                        type="text"
+                        required
+                        value={loginAccountInput}
+                        onChange={(e) => setLoginAccountInput(e.target.value)}
+                        placeholder="anhduonganhtuan@gmail.com"
+                        className="w-full px-4 py-3 rounded-xl bg-white text-[#1B3B48] text-sm font-medium focus:outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold mb-1 text-gray-200">Mã đăng nhập (Mặc định: 123456)</label>
+                      <input
+                        type="password"
+                        required
+                        value={loginPinInput}
+                        onChange={(e) => setLoginPinInput(e.target.value)}
+                        placeholder="••••••"
+                        className="w-full px-4 py-3 rounded-xl bg-white text-[#1B3B48] text-sm font-medium focus:outline-none"
+                      />
+                    </div>
+                    {loginError && (
+                      <div className="p-3 rounded-xl bg-red-500/20 border border-red-400/40 text-red-100 text-xs">{loginError}</div>
+                    )}
+                    <button
+                      type="submit"
+                      className="w-full bg-[#5C7667] hover:bg-[#4A6154] text-white font-bold py-3 rounded-xl text-sm flex items-center justify-center gap-2"
+                    >
+                      <Lock className="w-4 h-4" />
+                      <span>Mở khóa Sổ Quản Lý</span>
+                    </button>
+                  </form>
+                </div>
+              </div>
+            </main>
+          </div>
+        );
+      }
+
+      // ==========================================================================
+      // GIAO DIỆN CHÍNH SAU KHI ĐĂNG NHẬP
+      // ==========================================================================
+      return (
+        <div className="min-h-screen bg-[#F7F6F2] text-[#1B3B48] flex flex-col md:flex-row font-sans">
+          {toastMsg && (
+            <div className="fixed bottom-4 right-4 z-50 bg-[#1B3B48] text-white px-4 py-3 rounded-xl border border-[#5C7667] shadow-lg text-xs font-medium flex items-center gap-2 no-print">
+              <Check className="w-4 h-4 text-[#E9C46A] shrink-0" />
+              <span>{toastMsg}</span>
+            </div>
+          )}
+
+          {/* SIDEBAR */}
+          <aside className="w-full md:w-64 bg-white border-b md:border-b-0 md:border-r border-[#E2DFD7] flex flex-col justify-between shrink-0 no-print">
+            <div>
+              <div className="p-4 bg-[#1B3B48] text-[#F7F6F2]">
+                <div className="text-[11px] font-semibold text-[#E9C46A] truncate">{schoolName}</div>
+                <div className="flex items-center justify-between mt-1">
+                  <span className="text-sm font-extrabold text-white">Sổ Quản Lý Học Sinh</span>
+                  <span className="px-2 py-0.5 text-[11px] font-bold bg-white/15 text-white rounded">{schoolYear}</span>
+                </div>
+
+                {/* Đồng hồ & Lịch thực trên máy */}
+                <div className="mt-2.5 p-2 rounded-xl bg-black/25 text-[11px] flex items-center justify-between">
+                  <span className="text-[#E9C46A] font-bold">{todayDayObj.label}, {todayFullStr}</span>
+                  <span className="font-mono font-bold text-white">{liveClock.toLocaleTimeString('vi-VN')}</span>
+                </div>
+
+                {/* Chọn Học kỳ 1 / Học kỳ 2 */}
+                <div className="grid grid-cols-2 gap-1 mt-2.5 bg-black/25 p-1 rounded-xl text-xs">
+                  {['Học kỳ 1', 'Học kỳ 2'].map((sem) => (
+                    <button
+                      key={sem}
+                      onClick={() => handleSwitchSemester(sem)}
+                      className={`py-1.5 rounded-lg font-bold transition ${
+                        semester === sem ? 'bg-[#E9C46A] text-[#1B3B48]' : 'text-gray-200 hover:text-white'
+                      }`}
+                    >
+                      {sem}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* 1. GVCN */}
+              <div className="p-3 border-b border-[#EFECE6]">
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="text-xs font-bold text-[#1B3B48]">1. Công tác Chủ nhiệm (GVCN)</span>
+                </div>
+                {homeroomClassId && (
+                  <button
+                    onClick={() => setActiveClass(homeroomClassId)}
+                    className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold border ${
+                      activeClass === homeroomClassId
+                        ? 'bg-[#2C4A3E] text-white border-[#2C4A3E]'
+                        : 'bg-[#FAF9F6] text-[#1B3B48] border-[#E2DFD7]'
+                    }`}
+                  >
+                    <span className="flex items-center gap-1.5">
+                      <Award className="w-4 h-4 text-[#E9C46A]" />
+                      Lớp {homeroomClassId} (CN)
+                    </span>
+                    <span className="text-[11px] px-1.5 py-0.5 rounded bg-black/15">
+                      {(studentsByClass[homeroomClassId] || []).length} HS
+                    </span>
+                  </button>
+                )}
+              </div>
+
+              {/* 2. GVBM */}
+              <div className="p-3 border-b border-[#EFECE6]">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-bold text-[#1B3B48]">2. Lớp Bộ môn ({mainSubject})</span>
+                  <button
+                    onClick={() => setNewClassModalOpen(true)}
+                    className="text-[11px] font-bold text-[#2C4A3E] px-2 py-0.5 rounded-lg bg-[#EFECE6]"
+                  >
+                    + Thêm
+                  </button>
+                </div>
+                <div className="space-y-1 max-h-40 overflow-y-auto">
+                  {classes.map((cls) => (
+                    <button
+                      key={cls.id}
+                      onClick={() => setActiveClass(cls.id)}
+                      className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs font-semibold border ${
+                        activeClass === cls.id
+                          ? 'bg-[#1B3B48] text-white border-[#1B3B48]'
+                          : 'bg-white text-[#1B3B48] border-[#E2DFD7]'
+                      }`}
+                    >
+                      <span>{cls.name}</span>
+                      <span className="text-[11px] opacity-80">{(studentsByClass[cls.id] || []).length} HS</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* CÀI ĐẶT GV */}
+            <div className="p-3 border-t border-[#E2DFD7] bg-[#FAF9F6] space-y-2">
+              {!isEditingProfile ? (
+                <div className="flex items-center justify-between">
+                  <div className="min-w-0">
+                    <div className="text-xs font-bold text-[#1B3B48] truncate">{teacherName}</div>
+                    <div className="text-[11px] text-[#5C7667]">{AUTH_CONFIG.subNote} • {mainSubject}</div>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => setIsEditingProfile(true)}
+                      className="p-1.5 border border-[#E2DFD7] rounded-lg bg-white"
+                      title="Cài đặt GV"
+                    >
+                      <Settings className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={handleLogout}
+                      className="p-1.5 text-red-700 border border-red-200 rounded-lg bg-red-50"
+                      title="Đăng xuất"
+                    >
+                      <LogOut className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="p-2.5 bg-white border rounded-xl space-y-2 text-xs">
+                  <input type="text" value={teacherName} onChange={(e) => setTeacherName(e.target.value)} className="w-full px-2 py-1 border rounded" />
+                  <input type="text" value={schoolName} onChange={(e) => setSchoolName(e.target.value)} className="w-full px-2 py-1 border rounded" />
+                  <input type="password" value={newPinSetting} onChange={(e) => setNewPinSetting(e.target.value)} placeholder="Đổi mã PIN mới..." className="w-full px-2 py-1 border rounded" />
+                  <button
+                    onClick={() => {
+                      if (newPinSetting.trim()) { setTeacherPin(newPinSetting.trim()); setNewPinSetting(''); }
+                      setIsEditingProfile(false);
+                      showToast('Đã lưu cài đặt.');
+                    }}
+                    className="w-full bg-[#1B3B48] text-white rounded-lg py-1.5 font-bold"
+                  >
+                    Lưu cài đặt
+                  </button>
+                </div>
+              )}
+            </div>
+          </aside>
+
+          {/* VÙNG LÀM VIỆC CHÍNH */}
+          <main className="flex-1 flex flex-col min-w-0 no-print">
+            {/* TOP HEADER */}
+            <header className="bg-white border-b border-[#E2DFD7] px-6 py-3.5 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+              <div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <h1 className="text-xl font-extrabold text-[#1B3B48]">{currentClassObj.name}</h1>
+                  <span className="px-2.5 py-0.5 text-xs font-bold rounded-full bg-[#2C4A3E] text-white">
+                    {isHomeroomTeacher ? 'GVCN & Bộ môn' : `GVBM (${mainSubject})`}
+                  </span>
+                  <span className="text-xs text-[#5C7667] font-semibold">
+                    • {currentStudents.length} HS • {semester} • Hôm nay: <strong className="text-[#1B3B48]">{todayDayObj.label}, {todayFullStr}</strong>
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  onClick={handleSyncWeekToRealTimeToday}
+                  className="px-3 py-1.5 bg-[#EDF3EF] hover:bg-[#DCE8E0] text-[#2C4A3E] border border-[#C3D8CB] rounded-xl text-xs font-bold flex items-center gap-1"
+                  title="Đồng bộ Tuần đang chọn với ngày thực tế trên máy"
+                >
+                  <Clock className="w-3.5 h-3.5" />
+                  Đồng bộ Tuần thực tế
+                </button>
+                <button
+                  onClick={exportClassCSV}
+                  className="px-3 py-1.5 bg-[#EFECE6] hover:bg-[#E2DFD7] text-[#1B3B48] rounded-xl text-xs font-bold flex items-center gap-1"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  Xuất Excel
+                </button>
+              </div>
+            </header>
+
+            {/* THANH 8 PHÂN HỆ CHỨC NĂNG TOÀN DIỆN */}
+            <div className="bg-[#EFECE6]/70 border-b border-[#E2DFD7] px-4 sm:px-6 flex flex-col xl:flex-row xl:items-center xl:justify-between gap-2">
+              <nav className="flex flex-wrap gap-1 pt-2 xl:pt-0">
+                {[
+                  { id: 'HOSO', label: '1. Hồ sơ & Miễn giảm HP', icon: Users },
+                  { id: 'CHUYENCAN', label: '2. Chuyên cần (CN→T7)', icon: Calendar },
+                  { id: 'SODIEM', label: '3. Sổ điểm & Dự báo CK', icon: BookOpen },
+                  { id: 'THUNOP', label: '4. Bài tập & Sổ Quỹ lớp', icon: Wallet },
+                  { id: 'SODO', label: '5. Sơ đồ Bàn học', icon: LayoutGrid },
+                  { id: 'TONGKET', label: '6. Tổng kết & Khen thưởng', icon: FileText },
+                  { id: 'SO_LIEN_LAC', label: '7. Sổ Liên Lạc & Xin Phép PH', icon: MessageCircle },
+                  { id: 'THI_DUA_SO_DAU_BAI', label: '8. Thi đua 4 Tổ, Biểu đồ & Sổ Đầu Bài', icon: Trophy },
+                ].map((tab) => {
+                  const Icon = tab.icon;
+                  const active = activeTab === tab.id;
+                  return (
+                    <button
+                      key={tab.id}
+                      onClick={() => setActiveTab(tab.id)}
+                      className={`flex items-center gap-1.5 px-3 py-2.5 text-xs font-bold border-b-2 transition-colors ${
+                        active
+                          ? 'border-[#1B3B48] text-[#1B3B48] bg-white rounded-t-xl'
+                          : 'border-transparent text-[#5C7667] hover:text-[#1B3B48]'
+                      }`}
+                    >
+                      <Icon className="w-3.5 h-3.5" />
+                      <span>{tab.label}</span>
+                    </button>
+                  );
+                })}
+              </nav>
+
+              <div className="relative py-1.5">
+                <Search className="w-3.5 h-3.5 text-[#5C7667] absolute left-2.5 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  placeholder="Tìm tên HS, mã Bộ, chế độ HP..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-8 pr-3 py-1.5 text-xs bg-white border border-[#E2DFD7] rounded-xl w-full sm:w-56 focus:outline-none focus:border-[#1B3B48]"
+                />
+              </div>
+            </div>
+
+            {/* NỘI DUNG TỪNG TAB */}
+            <div className="p-6 flex-1 overflow-auto">
+              {/* ===================================================================
+                  TAB 1: HỒ SƠ HỌC SINH, HỌC NGHỀ, MIỄN GIẢM HỌC PHÍ & THẺ LƯU Ý ĐẶC BIỆT
+              =================================================================== */}
+              {activeTab === 'HOSO' && (
+                <div className="space-y-4">
+                  <datalist id="vocational-options-list">
+                    {VOCATIONAL_LIST.map((v) => <option key={v} value={v} />)}
+                  </datalist>
+
+                  {/* Banner Thống kê nhanh Chế độ Miễn giảm Học phí nghề & Sinh nhật tháng */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="bg-white p-4 rounded-2xl border border-[#E2DFD7] shadow-xs">
+                      <div className="text-[11px] font-bold uppercase text-[#5C7667]">Hồ sơ Miễn / Giảm Học phí nghề</div>
+                      <div className="text-lg font-extrabold text-[#1B3B48] mt-1">
+                        {currentStudents.filter((s) => s.tuitionStatus && !s.tuitionStatus.startsWith('Đóng đủ')).length} / {currentStudents.length} học sinh thuộc diện ưu tiên
+                      </div>
+                      <div className="text-xs text-[#9C6644] font-semibold mt-0.5">
+                        Chờ bổ sung giấy xác nhận: {currentStudents.filter((s) => !s.tuitionDocDone).length} hồ sơ
+                      </div>
+                    </div>
+
+                    <div className="bg-white p-4 rounded-2xl border border-[#E2DFD7] shadow-xs">
+                      <div className="text-[11px] font-bold uppercase text-[#5C7667]">🎂 Sinh nhật Học sinh Tháng {currentMonthNum}</div>
+                      <div className="text-xs font-bold text-[#1B3B48] mt-1.5">
+                        {birthdayStudentsThisMonth.length === 0
+                          ? `Không có học sinh sinh nhật trong tháng ${currentMonthNum}.`
+                          : birthdayStudentsThisMonth.map((s) => `${s.name} (${s.dob})`).join(' • ')}
+                      </div>
+                    </div>
+
+                    <div className="bg-white p-4 rounded-2xl border border-[#E2DFD7] shadow-xs flex items-center justify-between">
+                      <div>
+                        <div className="text-[11px] font-bold uppercase text-[#5C7667]">Thao tác Danh sách Lớp</div>
+                        <div className="flex flex-wrap gap-1.5 mt-2">
+                          <button
+                            onClick={() =>
+                              setStudentModal({
+                                mode: 'ADD',
+                                id: `HS${String(currentStudents.length + 1).padStart(3, '0')}`,
+                                moetId: `072211${String(currentStudents.length + 1).padStart(6, '0')}`,
+                                name: '', dob: '01/01/2011', gender: 'Nam', status: 'Đang học',
+                                vocational: 'Tin học ứng dụng', tuitionStatus: 'Đóng đủ học phí', tuitionDocDone: true,
+                                role: 'Thành viên', attitude: 'Tích cực', team: 1, seat: currentStudents.length + 1,
+                                deskSlot: '', studentPhone: '', parentPhone: '', specialNote: '', gvcnComment: '',
+                              })
+                            }
+                            className="px-3 py-1.5 bg-[#1B3B48] text-white rounded-xl text-xs font-bold"
+                          >
+                            + Thêm HS
+                          </button>
+                          <button
+                            onClick={() => setExcelImportModalOpen(true)}
+                            className="px-3 py-1.5 bg-[#EFECE6] text-[#1B3B48] rounded-xl text-xs font-bold"
+                          >
+                            Nhập Excel
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Bảng Hồ sơ chi tiết */}
+                  <div className="bg-white border border-[#E2DFD7] rounded-2xl overflow-x-auto shadow-xs">
+                    <table className="w-full text-left border-collapse text-xs">
+                      <thead>
+                        <tr className="bg-[#1B3B48] text-white font-semibold">
+                          <th className="py-2.5 px-2.5 border-r border-[#2C4A3E] w-32">Mã định danh</th>
+                          <th className="py-2.5 px-3 border-r border-[#2C4A3E] min-w-[155px]">Họ và tên</th>
+                          <th className="py-2.5 px-2 border-r border-[#2C4A3E] w-16 text-center">Tổ</th>
+                          <th className="py-2.5 px-2.5 border-r border-[#2C4A3E] min-w-[140px]">Học nghề</th>
+                          <th className="py-2.5 px-2.5 border-r border-[#2C4A3E] min-w-[195px]">Chế độ Miễn/Giảm Học phí</th>
+                          <th className="py-2.5 px-2 border-r border-[#2C4A3E] text-center w-24">Hồ sơ HP</th>
+                          <th className="py-2.5 px-2 border-r border-[#2C4A3E] w-28">SĐT PH</th>
+                          <th className="py-2.5 px-2.5 border-r border-[#2C4A3E] min-w-[170px]">Thẻ Lưu ý Đặc biệt</th>
+                          <th className="py-2.5 px-2.5 text-center w-40">In Phiếu PDF</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-[#EFECE6]">
+                        {filteredStudents.map((stu) => (
+                          <tr key={stu.id} className="hover:bg-[#F7F6F2]/70">
+                            <td className="py-1.5 px-2 border-r border-[#EFECE6] font-mono font-semibold text-[#5C7667]">
+                              {stu.moetId || stu.id}
+                            </td>
+                            <td className="py-1.5 px-2.5 border-r border-[#EFECE6]">
+                              <div className="font-bold text-[#1B3B48]">{stu.name}</div>
+                              <div className="text-[10px] text-[#5C7667]">{stu.dob} • {stu.role}</div>
+                            </td>
+                            <td className="py-1.5 px-1.5 border-r border-[#EFECE6] text-center">
+                              <select
+                                value={stu.team || 1}
+                                onChange={(e) => handleUpdateStudentFieldInline(stu.id, 'team', Number(e.target.value))}
+                                className="px-1.5 py-1 rounded border bg-[#FAF9F6] font-bold"
+                              >
+                                {[1, 2, 3, 4].map((t) => <option key={t} value={t}>Tổ {t}</option>)}
+                              </select>
+                            </td>
+                            <td className="py-1.5 px-2 border-r border-[#EFECE6]">
+                              <input
+                                type="text"
+                                list="vocational-options-list"
+                                value={stu.vocational || ''}
+                                onChange={(e) => handleUpdateStudentFieldInline(stu.id, 'vocational', e.target.value)}
+                                className="w-full px-2 py-1 bg-[#FAF9F6] border border-[#E2DFD7] rounded"
+                              />
+                            </td>
+                            <td className="py-1.5 px-2 border-r border-[#EFECE6]">
+                              <select
+                                value={stu.tuitionStatus || 'Đóng đủ học phí'}
+                                onChange={(e) => handleUpdateStudentFieldInline(stu.id, 'tuitionStatus', e.target.value)}
+                                className="w-full px-2 py-1 rounded border border-[#E2DFD7] bg-white font-medium text-[11px]"
+                              >
+                                {TUITION_STATUS_LIST.map((ts) => <option key={ts} value={ts}>{ts}</option>)}
+                              </select>
+                            </td>
+                            <td
+                              onClick={() => handleUpdateStudentFieldInline(stu.id, 'tuitionDocDone', !stu.tuitionDocDone)}
+                              className="py-1.5 px-2 border-r border-[#EFECE6] text-center cursor-pointer"
+                            >
+                              <span
+                                className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                                  stu.tuitionDocDone ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
+                                }`}
+                              >
+                                {stu.tuitionDocDone ? '✓ Đủ hồ sơ' : 'Thiếu giấy'}
+                              </span>
+                            </td>
+                            <td className="py-1.5 px-2 border-r border-[#EFECE6]">
+                              <input
+                                type="text"
+                                value={stu.parentPhone || ''}
+                                onChange={(e) => handleUpdateStudentFieldInline(stu.id, 'parentPhone', e.target.value)}
+                                className="w-full px-1.5 py-1 font-semibold text-[#2C4A3E] bg-transparent"
+                              />
+                            </td>
+                            <td className="py-1.5 px-2 border-r border-[#EFECE6]">
+                              <input
+                                type="text"
+                                value={stu.specialNote || ''}
+                                placeholder="Ghi lưu ý riêng..."
+                                onChange={(e) => handleUpdateStudentFieldInline(stu.id, 'specialNote', e.target.value)}
+                                className="w-full px-2 py-1 bg-[#FAF9F6] border border-[#E2DFD7] rounded text-[11px]"
+                              />
+                            </td>
+                            <td className="py-1.5 px-2 text-center space-x-1">
+                              <button
+                                onClick={() => triggerPrintPDF(stu, 'COMMENDATION')}
+                                className="px-2 py-1 bg-[#2C4A3E] text-white rounded text-[10px] font-bold"
+                                title="In Giấy Biểu Dương PDF A4"
+                              >
+                                Biểu dương
+                              </button>
+                              <button
+                                onClick={() => triggerPrintPDF(stu, 'CONDUCT_WEEKLY')}
+                                className="px-2 py-1 bg-[#9C6644] text-white rounded text-[10px] font-bold"
+                              >
+                                Phiếu Tuần
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {/* ===================================================================
+                  TAB 2: CHUYÊN CẦN TUẦN (CN TUẦN TRƯỚC -> THỨ 7) ĐỒNG BỘ THỜI GIAN THỰC
+              =================================================================== */}
+              {activeTab === 'CHUYENCAN' && (
+                <div className="space-y-4">
+                  <div className="bg-white p-5 rounded-2xl border border-[#E2DFD7] shadow-xs space-y-4">
+                    <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+                      <div className="flex flex-wrap items-center gap-3">
+                        <div>
+                          <label className="block text-[11px] font-bold text-[#5C7667]">Tuần học ({semester})</label>
+                          <select
+                            value={selectedWeek}
+                            onChange={(e) => setSelectedWeek(Number(e.target.value))}
+                            className="mt-0.5 px-3 py-1.5 bg-[#FAF9F6] border border-[#E2DFD7] rounded-xl text-xs font-extrabold text-[#1B3B48]"
+                          >
+                            {(SEMESTER_WEEKS[semester] || []).map((w) => (
+                              <option key={w} value={w}>Tuần {w} ({semester})</option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div>
+                          <label className="block text-[11px] font-bold text-[#5C7667]">Ngày Chủ nhật đầu tuần:</label>
+                          <input
+                            type="text"
+                            value={currentWeekInfo.days?.CN || ''}
+                            onChange={(e) => handleUpdateWeekDayDate('CN', e.target.value)}
+                            className="mt-0.5 px-3 py-1.5 bg-[#F7F6F2] border border-[#5C7667]/50 rounded-xl text-xs font-bold w-40"
+                          />
+                        </div>
+
+                        <button
+                          onClick={handleSyncWeekToRealTimeToday}
+                          className="mt-4 px-3 py-1.5 bg-[#2C4A3E] text-white rounded-xl text-xs font-bold"
+                        >
+                          🕒 Đồng bộ đúng Tuần Hôm Nay trên máy
+                        </button>
+                      </div>
+
+                      <div className="flex flex-wrap items-center gap-2">
+                        <button
+                          onClick={() => triggerPrintPDF('ALL', 'CONDUCT_WEEKLY')}
+                          className="px-3.5 py-1.5 bg-[#9C6644] text-white rounded-xl text-xs font-bold flex items-center gap-1"
+                        >
+                          <Printer className="w-3.5 h-3.5" />
+                          In PDF Phiếu Tuần {selectedWeek}
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Ô điền ngày CN -> T7 (Tự động tô sáng ngày HÔM NAY trên máy) */}
+                    <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2">
+                      {DAYS_OF_WEEK.map((d) => {
+                        const dVal = currentWeekInfo.days?.[d.key] || '';
+                        const isTodayCell = dVal === todayDDMM || d.jsDay === liveClock.getDay();
+                        return (
+                          <div
+                            key={d.key}
+                            className={`p-2 rounded-xl border ${
+                              isTodayCell
+                                ? 'bg-[#1B3B48] text-white border-[#1B3B48]'
+                                : d.key === 'CN'
+                                ? 'bg-[#EFECE6] border-[#9C6644]/50'
+                                : 'bg-white border-[#E2DFD7]'
+                            }`}
+                          >
+                            <div className="flex items-center justify-between text-[11px] font-bold mb-1">
+                              <span>{d.label}</span>
+                              {isTodayCell && (
+                                <span className="px-1.5 py-0.2 rounded bg-[#E9C46A] text-[#1B3B48] text-[9px] font-black">
+                                  HÔM NAY
+                                </span>
+                              )}
+                            </div>
+                            <input
+                              type="text"
+                              value={dVal}
+                              onChange={(e) => handleUpdateWeekDayDate(d.key, e.target.value)}
+                              className={`w-full px-2 py-1 text-xs font-mono font-bold text-center border rounded-lg ${
+                                isTodayCell ? 'bg-white text-[#1B3B48]' : 'bg-[#FAF9F6] text-[#1B3B48]'
+                              }`}
+                            />
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {/* Chấm chuyên cần / Cộng điểm nhanh hàng loạt theo Tổ */}
+                    <div className="p-3 rounded-xl bg-[#EFECE6]/70 border border-[#DFDBD0] flex flex-wrap items-center gap-2 text-xs">
+                      <span className="font-bold text-[#1B3B48]">⚡ Chấm nhanh cả Tổ:</span>
+                      <select value={batchTeam} onChange={(e) => setBatchTeam(Number(e.target.value))} className="px-2 py-1 rounded border bg-white font-bold">
+                        {[1, 2, 3, 4].map((t) => <option key={t} value={t}>Tổ {t}</option>)}
+                      </select>
+                      <select value={batchDay} onChange={(e) => setBatchDay(e.target.value)} className="px-2 py-1 rounded border bg-white font-bold">
+                        {DAYS_OF_WEEK.map((d) => <option key={d.key} value={d.key}>{d.label}</option>)}
+                      </select>
+                      <select value={batchSession} onChange={(e) => setBatchSession(e.target.value)} className="px-2 py-1 rounded border bg-white font-bold">
+                        <option value="S">Buổi Sáng</option>
+                        <option value="C">Buổi Chiều</option>
+                      </select>
+                      <select value={batchCode} onChange={(e) => setBatchCode(e.target.value)} className="px-2 py-1 rounded border bg-white font-bold">
+                        {attendanceTypes.map((t) => <option key={t.id} value={t.id}>[{t.id}] {t.label}</option>)}
+                      </select>
+                      <button onClick={handleBatchTeamAttendance} className="px-3 py-1 bg-[#1B3B48] text-white rounded-lg font-bold">
+                        Áp dụng cho cả Tổ {batchTeam}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Bảng Điểm danh 7 ngày */}
+                  <div className="bg-white border border-[#E2DFD7] rounded-2xl overflow-x-auto shadow-xs">
+                    <table className="w-full text-left border-collapse text-xs">
+                      <thead>
+                        <tr className="bg-[#1B3B48] text-white font-semibold">
+                          <th className="py-2.5 px-3 border-r border-[#2C4A3E] min-w-[155px]">Họ và tên</th>
+                          {DAYS_OF_WEEK.map((d) => {
+                            const dVal = currentWeekInfo.days?.[d.key];
+                            const isToday = dVal === todayDDMM;
+                            return (
+                              <th
+                                key={d.key}
+                                className={`py-2 px-2 border-r border-[#2C4A3E] text-center min-w-[120px] ${
+                                  isToday ? 'bg-[#2C4A3E] text-[#E9C46A]' : ''
+                                }`}
+                              >
+                                <div>{d.label} {dVal ? `(${dVal})` : ''}</div>
+                              </th>
+                            );
+                          })}
+                          <th className="py-2.5 px-2 border-r border-[#2C4A3E] text-center w-20">Điểm</th>
+                          <th className="py-2.5 px-2 text-center w-24">Phiếu</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-[#EFECE6]">
+                        {filteredStudents.map((stu) => {
+                          const summary = calculateWeeklyConductScore(stu.id, selectedWeek);
+                          return (
+                            <tr key={stu.id} className="hover:bg-[#F7F6F2]/70">
+                              <td className="py-2 px-3 border-r border-[#EFECE6] font-bold text-[#1B3B48]">
+                                {stu.name} <span className="text-[10px] font-normal text-[#5C7667]">(Tổ {stu.team || 1})</span>
+                              </td>
+                              {DAYS_OF_WEEK.map((d) => {
+                                const mCodes = getStudentDaySessionCodes(stu.id, d.key, 'S', selectedWeek);
+                                const aCodes = getStudentDaySessionCodes(stu.id, d.key, 'C', selectedWeek);
+                                return (
+                                  <td key={d.key} className="p-1.5 border-r border-[#EFECE6]">
+                                    <div className="space-y-1">
+                                      <div
+                                        onClick={() => setAttendanceModal({ student: stu, dayKey: d.key, dayLabel: d.label })}
+                                        className="px-1.5 py-0.5 rounded border bg-white hover:border-[#1B3B48] cursor-pointer flex justify-between text-[10px]"
+                                      >
+                                        <span className="font-bold text-[#1B3B48]">S:</span>
+                                        <span>{mCodes.length === 0 ? 'Đủ' : mCodes.join(',')}</span>
+                                      </div>
+                                      <div
+                                        onClick={() => setAttendanceModal({ student: stu, dayKey: d.key, dayLabel: d.label })}
+                                        className="px-1.5 py-0.5 rounded border bg-[#FAF9F6] hover:border-[#9C6644] cursor-pointer flex justify-between text-[10px]"
+                                      >
+                                        <span className="font-bold text-[#9C6644]">C:</span>
+                                        <span>{aCodes.length === 0 ? 'Đủ' : aCodes.join(',')}</span>
+                                      </div>
+                                    </div>
+                                  </td>
+                                );
+                              })}
+                              <td className="py-2 px-2 border-r border-[#EFECE6] text-center font-extrabold">{summary.score}đ</td>
+                              <td className="py-2 px-2 text-center">
+                                <button
+                                  onClick={() => triggerPrintPDF(stu, 'CONDUCT_WEEKLY')}
+                                  className="px-2 py-1 bg-[#9C6644] text-white rounded text-[10px] font-bold"
+                                >
+                                  In Tuần
+                                </button>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {/* ===================================================================
+                  TAB 3: SỔ ĐIỂM KTĐG & DỰ BÁO ĐIỂM CUỐI KỲ CẦN ĐẠT
+              =================================================================== */}
+              {activeTab === 'SODIEM' && (
+                <div className="space-y-4">
+                  <div className="bg-white p-4 rounded-2xl border border-[#E2DFD7] flex flex-wrap items-center justify-between gap-3">
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      {currentSubjects.map((subj) => (
+                        <button
+                          key={subj}
+                          onClick={() => setSelectedSubject(subj)}
+                          className={`px-3 py-1.5 rounded-xl text-xs font-bold border ${
+                            selectedSubject === subj ? 'bg-[#1B3B48] text-white border-[#1B3B48]' : 'bg-[#FAF9F6] text-[#1B3B48]'
+                          }`}
+                        >
+                          {subj}
+                        </button>
+                      ))}
+                    </div>
+                    <button
+                      onClick={() => triggerPrintPDF('ALL', 'GRADES')}
+                      className="px-3.5 py-1.5 bg-[#1B3B48] text-white rounded-xl text-xs font-bold flex items-center gap-1"
+                    >
+                      <Printer className="w-3.5 h-3.5" />
+                      In Phiếu Điểm (PDF)
+                    </button>
+                  </div>
+
+                  <div className="bg-white border border-[#E2DFD7] rounded-2xl overflow-x-auto shadow-xs">
+                    <table className="w-full text-left border-collapse text-xs">
+                      <thead>
+                        <tr className="bg-[#1B3B48] text-white font-semibold">
+                          <th className="py-2.5 px-3 border-r border-[#2C4A3E] min-w-[160px]">Họ và tên</th>
+                          <th className="py-2.5 px-1.5 border-r border-[#2C4A3E] text-center w-14">TX1</th>
+                          <th className="py-2.5 px-1.5 border-r border-[#2C4A3E] text-center w-14">TX2</th>
+                          <th className="py-2.5 px-1.5 border-r border-[#2C4A3E] text-center w-14">TX3</th>
+                          <th className="py-2.5 px-1.5 border-r border-[#2C4A3E] text-center w-14">TX4</th>
+                          <th className="py-2.5 px-1.5 border-r border-[#2C4A3E] text-center w-16 bg-[#2C4A3E]">GK (HS2)</th>
+                          <th className="py-2.5 px-1.5 border-r border-[#2C4A3E] text-center w-16 bg-[#9C6644]">CK (HS3)</th>
+                          <th className="py-2.5 px-2 border-r border-[#2C4A3E] text-center w-20">ĐTB {semester}</th>
+                          <th className="py-2.5 px-2.5 border-r border-[#2C4A3E] text-center min-w-[180px] bg-[#2C4A3E]">
+                            🎯 Dự báo điểm CK cần đạt (Giỏi ≥8.0 / Khá ≥6.5)
+                          </th>
+                          <th className="py-2.5 px-3 min-w-[190px]">Nhận xét môn</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-[#EFECE6]">
+                        {filteredStudents.map((stu) => {
+                          const scoreObj = getStudentSubjectScoreObj(stu.id, selectedSubject, semester);
+                          const avg = calculateSubjectAverage(scoreObj);
+                          const req8 = predictRequiredFinalScore(scoreObj, 8.0);
+                          const req65 = predictRequiredFinalScore(scoreObj, 6.5);
+
+                          return (
+                            <tr key={stu.id} className="hover:bg-[#F7F6F2]/70">
+                              <td className="py-2 px-3 border-r border-[#EFECE6] font-bold text-[#1B3B48]">{stu.name}</td>
+                              {['tx1', 'tx2', 'tx3', 'tx4', 'gk', 'ck'].map((col) => (
+                                <td key={col} className="p-1 border-r border-[#EFECE6] text-center">
+                                  <input
+                                    type="text"
+                                    value={scoreObj[col] || ''}
+                                    placeholder="-"
+                                    onChange={(e) => handleGradeChange(stu.id, col, e.target.value)}
+                                    className="w-full py-1 text-center font-bold bg-transparent hover:bg-[#EFECE6] rounded"
+                                  />
+                                </td>
+                              ))}
+                              <td className="py-2 px-2 border-r border-[#EFECE6] text-center font-extrabold text-sm">
+                                {avg !== null ? avg : '--'}
+                              </td>
+                              <td className="py-2 px-2.5 border-r border-[#EFECE6] text-center text-[11px]">
+                                {req8 === null ? (
+                                  <span className="text-gray-400">Chưa có điểm TX/GK</span>
+                                ) : (
+                                  <div className="space-y-0.5">
+                                    <div className="font-bold text-[#2C4A3E]">
+                                      Giỏi (8.0): {req8 > 10 ? <span className="text-red-600">Không khả thi ({req8})</span> : req8 <= 0 ? 'Đã chắc chắn' : `${req8}đ`}
+                                    </div>
+                                    <div className="text-[#5C7667]">
+                                      Khá (6.5): {req65 > 10 ? <span className="text-red-600">{req65}đ</span> : req65 <= 0 ? 'Đã đạt' : `${req65}đ`}
+                                    </div>
+                                  </div>
+                                )}
+                              </td>
+                              <td className="p-1.5">
+                                <input
+                                  type="text"
+                                  value={scoreObj.comment || ''}
+                                  onChange={(e) => handleGradeChange(stu.id, 'comment', e.target.value)}
+                                  placeholder="Nhận xét..."
+                                  className="w-full px-2 py-1 border rounded bg-[#FAF9F6]"
+                                />
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {/* ===================================================================
+                  TAB 4: BÀI TẬP VỀ NHÀ & SỔ THU CHI QUỸ LỚP MINH BẠCH
+              =================================================================== */}
+              {activeTab === 'THUNOP' && (
+                <div className="space-y-6">
+                  {/* SỔ THU CHI QUỸ LỚP */}
+                  <div className="bg-white p-6 rounded-2xl border border-[#E2DFD7] shadow-xs space-y-4">
+                    <div className="flex flex-wrap items-center justify-between gap-3 border-b pb-3">
+                      <div>
+                        <span className="text-[11px] font-bold uppercase text-[#5C7667]">Tài chính Lớp học Minh bạch</span>
+                        <h3 className="text-lg font-bold text-[#1B3B48]">💰 Sổ Thu Chi Quỹ Lớp {currentClassObj.name}</h3>
+                      </div>
+                      <div className="flex flex-wrap gap-3 text-xs">
+                        <div className="px-3.5 py-2 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 font-bold">
+                          Tổng Thu: +{fundSummary.totalIn.toLocaleString('vi-VN')} đ
+                        </div>
+                        <div className="px-3.5 py-2 rounded-xl bg-rose-50 border border-rose-200 text-rose-900 font-bold">
+                          Tổng Chi: -{fundSummary.totalOut.toLocaleString('vi-VN')} đ
+                        </div>
+                        <div className="px-3.5 py-2 rounded-xl bg-[#1B3B48] text-[#E9C46A] font-extrabold">
+                          Tồn Quỹ Hiện Tại: {fundSummary.balance.toLocaleString('vi-VN')} đ
+                        </div>
+                      </div>
+                    </div>
+
+                    <form
+                      onSubmit={(e) => {
+                        e.preventDefault();
+                        if (!fundForm.title.trim() || !fundForm.amount) return;
+                        const newItem = {
+                          id: 'F' + Date.now(),
+                          date: todayFullStr,
+                          type: fundForm.type,
+                          title: fundForm.title.trim(),
+                          amount: Number(fundForm.amount),
+                          note: fundForm.note.trim(),
+                        };
+                        setFundTransactionsByClass((prev) => ({
+                          ...prev,
+                          [activeClass]: [newItem, ...(prev[activeClass] || [])],
+                        }));
+                        setFundForm({ type: 'IN', title: '', amount: '', note: '' });
+                        showToast('Đã ghi nhận giao dịch vào Sổ Quỹ lớp.');
+                      }}
+                      className="grid grid-cols-1 sm:grid-cols-5 gap-2.5 text-xs"
+                    >
+                      <select
+                        value={fundForm.type}
+                        onChange={(e) => setFundForm({ ...fundForm, type: e.target.value })}
+                        className="p-2.5 rounded-xl border bg-[#FAF9F6] font-bold"
+                      >
+                        <option value="IN">➕ Khoản Thu (+)</option>
+                        <option value="OUT">➖ Khoản Chi (-)</option>
+                      </select>
+                      <input
+                        type="text"
+                        required
+                        value={fundForm.title}
+                        onChange={(e) => setFundForm({ ...fundForm, title: e.target.value })}
+                        placeholder="Nội dung thu/chi..."
+                        className="sm:col-span-2 p-2.5 rounded-xl border bg-[#FAF9F6]"
+                      />
+                      <input
+                        type="number"
+                        required
+                        value={fundForm.amount}
+                        onChange={(e) => setFundForm({ ...fundForm, amount: e.target.value })}
+                        placeholder="Số tiền (VNĐ)..."
+                        className="p-2.5 rounded-xl border bg-[#FAF9F6] font-bold"
+                      />
+                      <button type="submit" className="bg-[#1B3B48] text-white rounded-xl font-bold py-2.5">
+                        Ghi Sổ Quỹ
+                      </button>
+                    </form>
+
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left border-collapse text-xs">
+                        <thead>
+                          <tr className="bg-[#EFECE6] text-[#1B3B48] font-bold">
+                            <th className="py-2 px-3">Ngày</th>
+                            <th className="py-2 px-3">Loại</th>
+                            <th className="py-2 px-3">Nội dung Thu / Chi</th>
+                            <th className="py-2 px-3 text-right">Số tiền</th>
+                            <th className="py-2 px-3 text-right">Xóa</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-[#EFECE6]">
+                          {currentFunds.map((f) => (
+                            <tr key={f.id}>
+                              <td className="py-2 px-3">{f.date}</td>
+                              <td className="py-2 px-3">
+                                <span className={`px-2 py-0.5 rounded font-bold ${f.type === 'IN' ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}`}>
+                                  {f.type === 'IN' ? 'Thu quỹ' : 'Chi quỹ'}
+                                </span>
+                              </td>
+                              <td className="py-2 px-3 font-semibold">{f.title}</td>
+                              <td className={`py-2 px-3 text-right font-extrabold ${f.type === 'IN' ? 'text-emerald-700' : 'text-rose-700'}`}>
+                                {f.type === 'IN' ? '+' : '-'}{Number(f.amount).toLocaleString('vi-VN')} đ
+                              </td>
+                              <td className="py-2 px-3 text-right">
+                                <button
+                                  onClick={() =>
+                                    setFundTransactionsByClass((prev) => ({
+                                      ...prev,
+                                      [activeClass]: (prev[activeClass] || []).filter((x) => x.id !== f.id),
+                                    }))
+                                  }
+                                  className="text-red-600 font-bold"
+                                >
+                                  ✕
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* ===================================================================
+                  TAB 5: SƠ ĐỒ BÀN HỌC
+              =================================================================== */}
+              {activeTab === 'SODO' && (
+                <div className="space-y-4">
+                  <div className="bg-white p-4 rounded-2xl border border-[#E2DFD7] flex justify-between items-center">
+                    <h2 className="text-sm font-bold text-[#1B3B48]">Sơ đồ Chỗ ngồi Lớp {currentClassObj.name}</h2>
+                    <button
+                      onClick={() => triggerPrintPDF('SEATING_CHART', 'SEATING_CHART')}
+                      className="px-3.5 py-1.5 bg-[#1B3B48] text-white rounded-xl text-xs font-bold flex items-center gap-1"
+                    >
+                      <Printer className="w-3.5 h-3.5" />
+                      In Sơ đồ (PDF)
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    {[1, 2, 3, 4].map((colNum) => (
+                      <div key={colNum} className="bg-white border border-[#E2DFD7] rounded-2xl p-3 space-y-2">
+                        <div className="font-bold text-xs text-center text-[#1B3B48] border-b pb-1">DÃY {colNum} (TỔ {colNum})</div>
+                        {[1, 2, 3, 4, 5].map((deskNum) => (
+                          <div key={deskNum} className="border rounded-xl bg-[#FAF9F6] p-2 text-xs">
+                            <div className="text-[10px] font-bold text-[#5C7667] mb-1">Bàn {deskNum}</div>
+                            <div className="grid grid-cols-2 gap-1">
+                              {[1, 2].map((seatPos) => {
+                                const slotKey = `${colNum}-${deskNum}-${seatPos}`;
+                                const seated = currentStudents.find((s) => s.deskSlot === slotKey);
+                                return (
+                                  <select
+                                    key={slotKey}
+                                    value={seated ? seated.id : ''}
+                                    onChange={(e) => {
+                                      const val = e.target.value;
+                                      setStudentsByClass((prev) => ({
+                                        ...prev,
+                                        [activeClass]: (prev[activeClass] || []).map((s) =>
+                                          s.id === val ? { ...s, deskSlot: slotKey, team: colNum } : s.deskSlot === slotKey ? { ...s, deskSlot: '' } : s
+                                        ),
+                                      }));
+                                    }}
+                                    className="w-full p-1 rounded border bg-white text-[11px] font-semibold"
+                                  >
+                                    <option value="">Ghế {seatPos}</option>
+                                    {currentStudents.map((st) => <option key={st.id} value={st.id}>{st.name}</option>)}
+                                  </select>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* ===================================================================
+                  TAB 6: TỔNG KẾT & IN GIẤY BIỂU DƯƠNG KHEN THƯỞNG PDF A4
+              =================================================================== */}
+              {activeTab === 'TONGKET' && (
+                <div className="space-y-4">
+                  <div className="bg-white p-4 rounded-2xl border border-[#E2DFD7] flex flex-wrap items-center justify-between gap-3">
+                    <h2 className="text-base font-bold text-[#1B3B48]">
+                      Tổng kết Thi đua, Học tập & In Giấy Biểu Dương Khen Thưởng ({currentClassObj.name})
+                    </h2>
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        onClick={() => triggerPrintPDF('ALL', 'COMMENDATION')}
+                        className="px-3.5 py-1.5 bg-[#2C4A3E] text-white rounded-xl text-xs font-bold flex items-center gap-1"
+                      >
+                        <Award className="w-3.5 h-3.5 text-[#E9C46A]" />
+                        In Giấy Biểu Dương Cả Lớp (PDF A4)
+                      </button>
+                      <button
+                        onClick={() => triggerPrintPDF('ALL', 'GRADES')}
+                        className="px-3.5 py-1.5 bg-[#1B3B48] text-white rounded-xl text-xs font-bold flex items-center gap-1"
+                      >
+                        <Printer className="w-3.5 h-3.5" />
+                        In Bảng Điểm Cả Lớp
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="bg-white border border-[#E2DFD7] rounded-2xl overflow-x-auto shadow-xs">
+                    <table className="w-full text-left border-collapse text-xs">
+                      <thead>
+                        <tr className="bg-[#1B3B48] text-white font-semibold">
+                          <th className="py-2.5 px-3 border-r border-[#2C4A3E]">Họ và tên</th>
+                          <th className="py-2.5 px-2 border-r border-[#2C4A3E] text-center">Rèn luyện</th>
+                          <th className="py-2.5 px-2 border-r border-[#2C4A3E] text-center">ĐTB Chung</th>
+                          <th className="py-2.5 px-2 border-r border-[#2C4A3E] text-center">Danh hiệu</th>
+                          <th className="py-2.5 px-3 text-center">Xuất Giấy Biểu Dương / Phiếu PDF</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-[#EFECE6]">
+                        {filteredStudents.map((stu) => {
+                          const yCond = calculateYearAttendanceSummary(stu.id);
+                          const gpa = getStudentOverallGPA(stu.id, summaryPeriodMode);
+                          const honor = getHonorTitle(gpa, yCond.yearConductRank);
+                          return (
+                            <tr key={stu.id} className="hover:bg-[#F7F6F2]/70">
+                              <td className="py-2.5 px-3 border-r border-[#EFECE6] font-bold text-[#1B3B48]">{stu.name}</td>
+                              <td className="py-2.5 px-2 border-r border-[#EFECE6] text-center font-bold">
+                                {yCond.avgConductScore}đ ({yCond.yearConductRank})
+                              </td>
+                              <td className="py-2.5 px-2 border-r border-[#EFECE6] text-center font-extrabold text-sm">{gpa ?? '--'}</td>
+                              <td className="py-2.5 px-2 border-r border-[#EFECE6] text-center font-bold text-[#2C4A3E]">{honor}</td>
+                              <td className="py-2.5 px-3 text-center space-x-2">
+                                <button
+                                  onClick={() => triggerPrintPDF(stu, 'COMMENDATION')}
+                                  className="px-3 py-1 bg-[#2C4A3E] text-white rounded-lg text-xs font-bold"
+                                >
+                                  🏅 In Giấy Biểu Dương
+                                </button>
+                                <button
+                                  onClick={() => triggerPrintPDF(stu, 'GRADES')}
+                                  className="px-3 py-1 bg-[#1B3B48] text-white rounded-lg text-xs font-bold"
+                                >
+                                  Phiếu Điểm
+                                </button>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {/* ===================================================================
+                  TAB 7: SỔ LIÊN LẠC & TƯƠNG TÁC PHỤ HUYNH
+              =================================================================== */}
+              {activeTab === 'SO_LIEN_LAC' && (
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                  <div className="lg:col-span-7 bg-white p-6 rounded-2xl border border-[#E2DFD7] space-y-4">
+                    <h3 className="text-base font-bold text-[#1B3B48]">
+                      📱 Kết Nối Nhanh Zalo / Gọi Điện / SMS Phụ Huynh
+                    </h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                      <div>
+                        <label className="block font-bold mb-1">Chọn Học sinh:</label>
+                        <select
+                          value={selectedContactStuId}
+                          onChange={(e) => {
+                            setSelectedContactStuId(e.target.value);
+                            const st = currentStudents.find((x) => x.id === e.target.value);
+                            if (st) setMsgCustomText(buildParentZaloTemplate(st, msgScenario));
+                          }}
+                          className="w-full p-2.5 rounded-xl border bg-[#FAF9F6] font-bold"
+                        >
+                          {currentStudents.map((s) => (
+                            <option key={s.id} value={s.id}>{s.name} — SĐT PH: {s.parentPhone || 'Chưa có'}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block font-bold mb-1">Chọn Kịch bản tin nhắn mẫu:</label>
+                        <select
+                          value={msgScenario}
+                          onChange={(e) => {
+                            setMsgScenario(e.target.value);
+                            const st = currentStudents.find((x) => x.id === selectedContactStuId);
+                            if (st) setMsgCustomText(buildParentZaloTemplate(st, e.target.value));
+                          }}
+                          className="w-full p-2.5 rounded-xl border bg-[#FAF9F6] font-bold"
+                        >
+                          <option value="WEEKLY_REPORT">1. Báo cáo tổng hợp Tuần (CN → T7)</option>
+                          <option value="VIOLATION_ALERT">2. Nhắc nhở vi phạm nề nếp / đi muộn</option>
+                          <option value="PRAISE_HONOR">3. Biểu dương học tập & chuyên cần tốt</option>
+                          <option value="TUITION_REMINDER">4. Nhắc hồ sơ miễn giảm học phí nghề</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    {(() => {
+                      const targetStu = currentStudents.find((s) => s.id === selectedContactStuId) || currentStudents[0];
+                      if (!targetStu) return null;
+                      const previewMsg = msgCustomText || buildParentZaloTemplate(targetStu, msgScenario);
+                      return (
+                        <div className="space-y-3">
+                          <textarea
+                            rows={4}
+                            value={previewMsg}
+                            onChange={(e) => setMsgCustomText(e.target.value)}
+                            className="w-full p-3 rounded-xl border bg-[#F7F6F2] text-xs leading-relaxed"
+                          />
+                          <div className="flex flex-wrap gap-2">
+                            <button
+                              onClick={() => handleCopyAndOpenZalo(targetStu, previewMsg)}
+                              className="px-4 py-2 bg-[#1B3B48] text-white rounded-xl text-xs font-bold"
+                            >
+                              💬 Copy & Mở Chat Zalo PH
+                            </button>
+                            {targetStu.parentPhone && (
+                              <a
+                                href={`tel:${targetStu.parentPhone}`}
+                                className="px-4 py-2 bg-[#2C4A3E] text-white rounded-xl text-xs font-bold flex items-center gap-1"
+                              >
+                                <Phone className="w-3.5 h-3.5" />
+                                Gọi điện ({targetStu.parentPhone})
+                              </a>
+                            )}
+                            <button
+                              onClick={() => triggerPrintPDF(targetStu, 'PARENT_INVITE')}
+                              className="px-4 py-2 bg-[#9C6644] text-white rounded-xl text-xs font-bold"
+                            >
+                              🖨 In Giấy Mời / Phối hợp PH
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })()}
+                  </div>
+
+                  {/* Tiếp nhận Đơn xin phép nghỉ học tự động đồng bộ mã [P] */}
+                  <div className="lg:col-span-5 bg-white p-6 rounded-2xl border border-[#E2DFD7] space-y-4">
+                    <h3 className="text-base font-bold text-[#1B3B48]">
+                      📩 Ghi Nhận Đơn Xin Phép Nghỉ Học (Tự động chấm [P])
+                    </h3>
+                    <form
+                      onSubmit={(e) => {
+                        e.preventDefault();
+                        const st = currentStudents.find((s) => s.id === leaveForm.studentId) || currentStudents[0];
+                        if (!st) return;
+                        toggleAttendanceCode(st.id, leaveForm.dayKey, 'P', leaveForm.sessionKey);
+                        const newLeave = {
+                          id: 'LV' + Date.now(),
+                          studentName: st.name,
+                          dayLabel: DAYS_OF_WEEK.find((d) => d.key === leaveForm.dayKey)?.label || leaveForm.dayKey,
+                          sessionLabel: leaveForm.sessionKey === 'S' ? 'Buổi Sáng' : 'Buổi Chiều',
+                          reason: leaveForm.reason || 'Phụ huynh xin phép',
+                          date: todayFullStr,
+                        };
+                        setLeaveRequestsByClass((prev) => ({
+                          ...prev,
+                          [activeClass]: [newLeave, ...(prev[activeClass] || [])],
+                        }));
+                        setLeaveForm({ ...leaveForm, reason: '' });
+                        showToast(`Đã duyệt đơn xin phép & tự động ghi mã [P] cho ${st.name}!`);
+                      }}
+                      className="space-y-3 text-xs"
+                    >
+                      <select
+                        value={leaveForm.studentId}
+                        onChange={(e) => setLeaveForm({ ...leaveForm, studentId: e.target.value })}
+                        className="w-full p-2.5 rounded-xl border bg-[#FAF9F6] font-bold"
+                      >
+                        {currentStudents.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+                      </select>
+                      <div className="grid grid-cols-2 gap-2">
+                        <select
+                          value={leaveForm.dayKey}
+                          onChange={(e) => setLeaveForm({ ...leaveForm, dayKey: e.target.value })}
+                          className="p-2.5 rounded-xl border bg-[#FAF9F6]"
+                        >
+                          {DAYS_OF_WEEK.map((d) => <option key={d.key} value={d.key}>{d.label}</option>)}
+                        </select>
+                        <select
+                          value={leaveForm.sessionKey}
+                          onChange={(e) => setLeaveForm({ ...leaveForm, sessionKey: e.target.value })}
+                          className="p-2.5 rounded-xl border bg-[#FAF9F6]"
+                        >
+                          <option value="S">Buổi Sáng</option>
+                          <option value="C">Buổi Chiều</option>
+                        </select>
+                      </div>
+                      <input
+                        type="text"
+                        required
+                        value={leaveForm.reason}
+                        onChange={(e) => setLeaveForm({ ...leaveForm, reason: e.target.value })}
+                        placeholder="Lý do xin nghỉ (VD: Ốm sốt, khám bệnh)..."
+                        className="w-full p-2.5 rounded-xl border bg-[#FAF9F6]"
+                      />
+                      <button type="submit" className="w-full py-2.5 bg-[#1B3B48] text-white rounded-xl font-bold">
+                        Duyệt Đơn & Tự động Ghi Mã [P]
+                      </button>
+                    </form>
+                  </div>
+                </div>
+              )}
+
+              {/* ===================================================================
+                  TAB 8: THI ĐUA 4 TỔ, BIỂU ĐỒ VI PHẠM, SỔ ĐẦU BÀI & TRỰC NHẬT TUẦN
+              =================================================================== */}
+              {activeTab === 'THI_DUA_SO_DAU_BAI' && (
+                <div className="space-y-6">
+                  {/* 1. BẢNG XẾP HẠNG THI ĐUA 4 TỔ */}
+                  <div className="bg-white p-6 rounded-2xl border border-[#E2DFD7] shadow-xs space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <span className="text-[11px] font-bold uppercase text-[#5C7667]">Tổng hợp Nề nếp & Điểm cộng</span>
+                        <h3 className="text-lg font-bold text-[#1B3B48]">
+                          🏆 Bảng Xếp Hạng Thi Đua 4 Tổ — Tuần {selectedWeek} ({semester})
+                        </h3>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                      {teamCompetitionRanking.map((t, idx) => (
+                        <div
+                          key={t.teamNum}
+                          className={`p-4 rounded-2xl border ${
+                            idx === 0
+                              ? 'bg-[#1B3B48] text-white border-[#1B3B48] shadow-md'
+                              : 'bg-[#FAF9F6] text-[#1B3B48] border-[#E2DFD7]'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className={`text-xs font-black px-2.5 py-0.5 rounded-full ${idx === 0 ? 'bg-[#E9C46A] text-[#1B3B48]' : 'bg-[#EFECE6]'}`}>
+                              HẠNG #{idx + 1}
+                            </span>
+                            <span className="text-xs opacity-80">{t.memberCount} thành viên</span>
+                          </div>
+                          <div className="text-xl font-extrabold mt-2">Tổ {t.teamNum}</div>
+                          <div className="text-2xl font-black mt-1 text-[#E9C46A]">{t.totalPoints} điểm</div>
+                          <div className="text-[11px] opacity-85 mt-1">
+                            Điểm cộng: +{t.plusTotal} lượt • Vi phạm: {t.violationTotal} lượt
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* 2. BIỂU ĐỒ HỌC SINH VI PHẠM NHIỀU & MẬT ĐỘ LỖI THEO THỨ */}
+                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                    <div className="lg:col-span-7 bg-white p-6 rounded-2xl border border-[#E2DFD7] space-y-4">
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-base font-bold text-[#1B3B48]">
+                          📊 Biểu Đồ Học Sinh Cần Quan Tâm / Vi Phạm Nhiều
+                        </h3>
+                        <div className="flex gap-1 text-xs">
+                          <button
+                            onClick={() => setViolationScope('WEEK')}
+                            className={`px-2.5 py-1 rounded-lg font-bold ${violationScope === 'WEEK' ? 'bg-[#1B3B48] text-white' : 'bg-[#EFECE6]'}`}
+                          >
+                            Tuần {selectedWeek}
+                          </button>
+                          <button
+                            onClick={() => setViolationScope('YEAR')}
+                            className={`px-2.5 py-1 rounded-lg font-bold ${violationScope === 'YEAR' ? 'bg-[#1B3B48] text-white' : 'bg-[#EFECE6]'}`}
+                          >
+                            Cả năm
+                          </button>
+                        </div>
+                      </div>
+
+                      {violationChartData.length === 0 ? (
+                        <p className="text-xs text-[#2C4A3E] font-semibold">
+                          🎉 Xuất sắc! Hiện chưa có học sinh nào vi phạm kỷ luật trong giai đoạn này.
+                        </p>
+                      ) : (
+                        <div className="space-y-3">
+                          {violationChartData.map((st) => {
+                            const barPct = Math.min(100, Math.max(15, st.count * 25));
+                            return (
+                              <div key={st.id} className="p-3 rounded-xl bg-[#FAF9F6] border space-y-2 text-xs">
+                                <div className="flex flex-wrap items-center justify-between gap-2">
+                                  <div>
+                                    <span className="font-bold text-[#1B3B48]">{st.name}</span> (Tổ {st.team || 1}) —{' '}
+                                    <span className="text-[#9C6644] font-bold">{st.detail}</span>
+                                  </div>
+                                  <div className="flex gap-1.5">
+                                    <button
+                                      onClick={() => handleCopyAndOpenZalo(st, buildParentZaloTemplate(st, 'VIOLATION_ALERT'))}
+                                      className="px-2 py-1 bg-[#1B3B48] text-white rounded font-bold"
+                                    >
+                                      Báo Zalo PH
+                                    </button>
+                                    <button
+                                      onClick={() => triggerPrintPDF(st, 'COMMITMENT')}
+                                      className="px-2 py-1 bg-[#9C6644] text-white rounded font-bold"
+                                    >
+                                      In Cam Kết
+                                    </button>
+                                  </div>
+                                </div>
+                                <div className="w-full h-2.5 bg-gray-200 rounded-full overflow-hidden">
+                                  <div className="h-full bg-[#9C6644]" style={{ width: `${barPct}%` }} />
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Mật độ vi phạm theo 7 ngày (CN -> T7) & Trực nhật tuần */}
+                    <div className="lg:col-span-5 bg-white p-6 rounded-2xl border border-[#E2DFD7] space-y-4">
+                      <h3 className="text-base font-bold text-[#1B3B48]">
+                        📅 Mật Độ Lỗi Theo Ngày & Phân Công Trực Nhật (CN → T7)
+                      </h3>
+                      <div className="space-y-2 text-xs">
+                        {dayDensityStats.map((d) => (
+                          <div key={d.key} className="flex items-center justify-between p-2 rounded-lg bg-[#FAF9F6] border">
+                            <span className="font-bold w-24">{d.label}:</span>
+                            <span className="text-[#5C7667] flex-1 truncate">{currentDuty[d.key] || 'Trực nhật theo phân công'}</span>
+                            <span className={`px-2 py-0.5 rounded font-bold ${d.errCount > 0 ? 'bg-rose-100 text-rose-800' : 'bg-emerald-100 text-emerald-800'}`}>
+                              {d.errCount} lỗi
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 3. SỔ ĐẦU BÀI TIẾT DẠY */}
+                  <div className="bg-white p-6 rounded-2xl border border-[#E2DFD7] shadow-xs space-y-4">
+                    <h3 className="text-lg font-bold text-[#1B3B48]">
+                      📖 Sổ Đầu Bài & Nhật Ký Giảng Dạy ({currentClassObj.name})
+                    </h3>
+                    <form
+                      onSubmit={(e) => {
+                        e.preventDefault();
+                        if (!lessonForm.lessonTitle.trim()) return;
+                        setLessonLogsByClass((prev) => ({
+                          ...prev,
+                          [activeClass]: [{ id: 'L' + Date.now(), ...lessonForm }, ...(prev[activeClass] || [])],
+                        }));
+                        setLessonForm({ ...lessonForm, lessonTitle: '', teacherNote: '' });
+                        showToast('Đã ghi Sổ đầu bài tiết dạy thành công!');
+                      }}
+                      className="grid grid-cols-1 sm:grid-cols-6 gap-2.5 text-xs"
+                    >
+                      <input type="text" value={lessonForm.date} onChange={(e) => setLessonForm({ ...lessonForm, date: e.target.value })} className="p-2.5 rounded-xl border bg-[#FAF9F6] font-bold" />
+                      <input type="text" value={lessonForm.period} onChange={(e) => setLessonForm({ ...lessonForm, period: e.target.value })} placeholder="Tiết dạy" className="p-2.5 rounded-xl border bg-[#FAF9F6]" />
+                      <input type="text" value={lessonForm.subject} onChange={(e) => setLessonForm({ ...lessonForm, subject: e.target.value })} placeholder="Môn học" className="p-2.5 rounded-xl border bg-[#FAF9F6]" />
+                      <input type="text" required value={lessonForm.lessonTitle} onChange={(e) => setLessonForm({ ...lessonForm, lessonTitle: e.target.value })} placeholder="Tên bài dạy / Nội dung..." className="sm:col-span-2 p-2.5 rounded-xl border bg-[#FAF9F6]" />
+                      <button type="submit" className="bg-[#1B3B48] text-white rounded-xl font-bold py-2.5">+ Ghi Sổ Đầu Bài</button>
+                    </form>
+
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left border-collapse text-xs">
+                        <thead>
+                          <tr className="bg-[#1B3B48] text-white font-semibold">
+                            <th className="py-2 px-3">Ngày</th>
+                            <th className="py-2 px-3">Tiết / Buổi</th>
+                            <th className="py-2 px-3">Môn</th>
+                            <th className="py-2 px-3">Tên bài dạy & Nội dung công việc</th>
+                            <th className="py-2 px-3">Xếp loại tiết</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-[#EFECE6]">
+                          {currentLessons.map((l) => (
+                            <tr key={l.id}>
+                              <td className="py-2 px-3 font-semibold">{l.date}</td>
+                              <td className="py-2 px-3">{l.period}</td>
+                              <td className="py-2 px-3 font-bold text-[#2C4A3E]">{l.subject}</td>
+                              <td className="py-2 px-3 font-bold text-[#1B3B48]">{l.lessonTitle}</td>
+                              <td className="py-2 px-3 font-semibold">{l.classRating}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </main>
+
+          {/* MODAL CHẤM CHUYÊN CẦN SÁNG & CHIỀU */}
+          {attendanceModal && (
+            <div className="fixed inset-0 z-40 bg-black/50 flex items-center justify-center p-4 no-print">
+              <div className="bg-white rounded-2xl w-full max-w-xl p-5 shadow-xl space-y-4">
+                <div className="flex justify-between items-center border-b pb-2">
+                  <h3 className="font-bold text-sm text-[#1B3B48]">
+                    Chuyên cần: {attendanceModal.student.name} — {attendanceModal.dayLabel}
+                  </h3>
+                  <button onClick={() => setAttendanceModal(null)}><X className="w-4 h-4" /></button>
+                </div>
+                <div className="grid grid-cols-2 gap-3 text-xs">
+                  {SESSIONS_OF_DAY.map((ses) => {
+                    const codes = getStudentDaySessionCodes(attendanceModal.student.id, attendanceModal.dayKey, ses.key, selectedWeek);
+                    return (
+                      <div key={ses.key} className="p-3 rounded-xl border bg-[#FAF9F6] space-y-1.5">
+                        <div className="font-bold text-[#1B3B48]">{ses.label}</div>
+                        {attendanceTypes.map((t) => {
+                          const active = codes.includes(t.id);
+                          return (
+                            <button
+                              key={t.id}
+                              onClick={() => toggleAttendanceCode(attendanceModal.student.id, attendanceModal.dayKey, t.id, ses.key)}
+                              className={`w-full text-left px-2.5 py-1.5 rounded-lg border font-medium flex justify-between ${
+                                active ? 'bg-[#1B3B48] text-white font-bold' : 'bg-white'
+                              }`}
+                            >
+                              <span>[{t.id}] {t.label}</span>
+                              <span>{t.points > 0 ? `+${t.points}` : t.points}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    );
+                  })}
+                </div>
+                <div className="flex justify-end">
+                  <button onClick={() => setAttendanceModal(null)} className="px-4 py-2 bg-[#1B3B48] text-white rounded-xl text-xs font-bold">
+                    Hoàn tất
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* MODAL THÊM HỌC SINH */}
+          {studentModal && (
+            <div className="fixed inset-0 z-40 bg-black/50 flex items-center justify-center p-4 no-print">
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  if (!studentModal.name.trim()) return;
+                  setStudentsByClass((prev) => ({
+                    ...prev,
+                    [activeClass]: [...(prev[activeClass] || []), { ...studentModal, id: 'HS' + Date.now() }],
+                  }));
+                  setStudentModal(null);
+                  showToast('Đã thêm học sinh mới.');
+                }}
+                className="bg-white rounded-2xl w-full max-w-md p-5 space-y-3 text-xs shadow-xl"
+              >
+                <h3 className="font-bold text-sm text-[#1B3B48]">Thêm Học Sinh Mới</h3>
+                <input type="text" required placeholder="Họ và tên *" value={studentModal.name} onChange={(e) => setStudentModal({ ...studentModal, name: e.target.value })} className="w-full p-2 border rounded-lg" />
+                <input type="text" placeholder="Ngày sinh (dd/mm/yyyy)" value={studentModal.dob} onChange={(e) => setStudentModal({ ...studentModal, dob: e.target.value })} className="w-full p-2 border rounded-lg" />
+                <input type="text" placeholder="SĐT Phụ huynh" value={studentModal.parentPhone} onChange={(e) => setStudentModal({ ...studentModal, parentPhone: e.target.value })} className="w-full p-2 border rounded-lg" />
+                <div className="flex justify-end gap-2">
+                  <button type="button" onClick={() => setStudentModal(null)} className="px-3 py-1.5 border rounded-lg">Hủy</button>
+                  <button type="submit" className="px-4 py-1.5 bg-[#1B3B48] text-white rounded-lg font-bold">Lưu</button>
+                </div>
+              </form>
+            </div>
+          )}
+
+          {/* MODAL NHẬP EXCEL */}
+          {excelImportModalOpen && (
+            <div className="fixed inset-0 z-40 bg-black/50 flex items-center justify-center p-4 no-print">
+              <div className="bg-white rounded-2xl w-full max-w-lg p-5 space-y-3 text-xs shadow-xl">
+                <h3 className="font-bold text-sm text-[#1B3B48]">Nhập Danh Sách từ Excel</h3>
+                <textarea rows={5} value={excelPasteText} onChange={(e) => setExcelPasteText(e.target.value)} placeholder="Mã Bộ | Họ tên | Ngày sinh | Giới tính" className="w-full p-2.5 border rounded-xl" />
+                <div className="flex justify-end gap-2">
+                  <button onClick={() => setExcelImportModalOpen(false)} className="px-3 py-1.5 border rounded-lg">Đóng</button>
+                  <button
+                    onClick={() => {
+                      const lines = excelPasteText.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+                      const added = lines.map((line, i) => {
+                        const cols = line.includes('\t') ? line.split('\t') : line.split(',');
+                        return {
+                          id: `HS_${Date.now()}_${i}`,
+                          moetId: cols[0]?.trim() || `07221100${i}`,
+                          name: cols[1]?.trim() || cols[0]?.trim(),
+                          dob: cols[2]?.trim() || '01/01/2011',
+                          gender: cols[3]?.trim() || 'Nam',
+                          status: 'Đang học',
+                          vocational: 'Tin học ứng dụng',
+                          tuitionStatus: 'Đóng đủ học phí',
+                          tuitionDocDone: true,
+                          role: 'Thành viên',
+                          attitude: 'Tích cực',
+                          team: (i % 4) + 1,
+                        };
+                      });
+                      setStudentsByClass((prev) => ({ ...prev, [activeClass]: [...(prev[activeClass] || []), ...added] }));
+                      setExcelPasteText('');
+                      setExcelImportModalOpen(false);
+                      showToast(`Đã nhập ${added.length} học sinh.`);
+                    }}
+                    className="px-4 py-1.5 bg-[#1B3B48] text-white rounded-lg font-bold"
+                  >
+                    Nhập vào lớp
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* MODAL THÊM LỚP */}
+          {newClassModalOpen && (
+            <div className="fixed inset-0 z-40 bg-black/50 flex items-center justify-center p-4 no-print">
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  if (!newClassName.trim()) return;
+                  const id = newClassName.trim().toUpperCase();
+                  setClasses((prev) => [...prev, { id, name: `Lớp ${id}` }]);
+                  setStudentsByClass((prev) => ({ ...prev, [id]: [] }));
+                  setNewClassName('');
+                  setNewClassModalOpen(false);
+                }}
+                className="bg-white rounded-2xl w-full max-w-sm p-5 space-y-3 text-xs shadow-xl"
+              >
+                <h3 className="font-bold text-sm text-[#1B3B48]">Tạo Lớp Mới</h3>
+                <input type="text" required placeholder="Tên lớp (VD: 12A1)" value={newClassName} onChange={(e) => setNewClassName(e.target.value)} className="w-full p-2 border rounded-lg" />
+                <div className="flex justify-end gap-2">
+                  <button type="button" onClick={() => setNewClassModalOpen(false)} className="px-3 py-1.5 border rounded-lg">Hủy</button>
+                  <button type="submit" className="px-4 py-1.5 bg-[#1B3B48] text-white rounded-lg font-bold">Tạo</button>
+                </div>
+              </form>
+            </div>
+          )}
+
+          {/* ===================================================================
+              HỆ THỐNG IN PDF A4 ĐA NĂNG (PHIẾU TUẦN, BẢNG ĐIỂM, GIẤY BIỂU DƯƠNG, CAM KẾT)
+          =================================================================== */}
+          <div className="hidden print-only w-full bg-white text-black">
+            {printReportType === 'COMMENDATION' ? (
+              /* MẪU IN GIẤY BIỂU DƯƠNG KHEN THƯỞNG A4 TRANG TRỌNG */
+              studentsToPrint.map((stu, idx) => {
+                const yCond = calculateYearAttendanceSummary(stu.id);
+                const gpa = getStudentOverallGPA(stu.id, summaryPeriodMode);
+                return (
+                  <div
+                    key={stu.id}
+                    className={`max-w-3xl mx-auto border-4 border-double border-[#1B3B48] p-8 text-center space-y-4 ${
+                      idx < studentsToPrint.length - 1 ? 'page-break' : ''
+                    }`}
+                  >
+                    <div className="text-xs font-bold uppercase text-[#1B3B48]">{schoolName}</div>
+                    <div className="text-xs uppercase font-semibold">CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM • Độc lập - Tự do - Hạnh phúc</div>
+                    <div className="pt-4">
+                      <div className="text-2xl font-extrabold uppercase tracking-wider text-[#9C6644]">
+                        GIẤY BIỂU DƯƠNG & KHEN THƯỞNG
+                      </div>
+                      <div className="text-xs italic mt-1">Năm học {schoolYear} — {semester}</div>
+                    </div>
+                    <div className="py-4 space-y-2 text-sm">
+                      <div>Trân trọng biểu dương em:</div>
+                      <div className="text-2xl font-black uppercase text-[#1B3B48]">{stu.name}</div>
+                      <div>Học sinh lớp: <strong>{currentClassObj.name}</strong> • Mã định danh: {stu.moetId || stu.id}</div>
+                      <p className="max-w-xl mx-auto pt-2 leading-relaxed">
+                        Đã có tinh thần học tập tích cực, chấp hành tốt nội quy lớp học (Điểm rèn luyện: <strong>{yCond.avgConductScore}đ</strong>, ĐTB học tập: <strong>{gpa ?? '--'}</strong>), xứng đáng là tấm gương tiêu biểu của tập thể lớp.
+                      </p>
+                    </div>
+                    <div className="pt-4 flex justify-end pr-8 text-xs">
+                      <div className="text-center">
+                        <div className="italic">Ngày {liveClock.getDate()} tháng {currentMonthNum} năm {liveClock.getFullYear()}</div>
+                        <div className="font-bold uppercase mt-1">GIÁO VIÊN CHỦ NHIỆM</div>
+                        <div className="mt-14 font-bold">{teacherName} ({AUTH_CONFIG.subNote})</div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })
+            ) : printReportType === 'COMMITMENT' ? (
+              /* MẪU IN BẢN CAM KẾT KHẮC PHỤC VI PHẠM A4 */
+              studentsToPrint.map((stu, idx) => (
+                <div key={stu.id} className={`max-w-3xl mx-auto p-6 text-xs space-y-4 ${idx < studentsToPrint.length - 1 ? 'page-break' : ''}`}>
+                  <div className="text-center">
+                    <div className="font-bold uppercase">CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</div>
+                    <div className="italic">Độc lập - Tự do - Hạnh phúc</div>
+                    <div className="text-base font-extrabold uppercase mt-3 text-[#1B3B48]">BẢN CAM KẾT RÈN LUYỆN & KHẮC PHỤC VI PHẠM</div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <div>Kính gửi: Giáo viên chủ nhiệm lớp <strong>{currentClassObj.name}</strong> — Thầy <strong>{teacherName}</strong></div>
+                    <div>Em tên là: <strong>{stu.name}</strong> • Ngày sinh: {stu.dob} • Lớp: {currentClassObj.name}</div>
+                    <div>Nội dung cần khắc phục trong Tuần {selectedWeek} ({currentWeekInfo.dateRange}): Chấp hành nghiêm giờ giấc học tập, chuyên cần đầy đủ và hoàn thành bài tập về nhà.</div>
+                    <div>Em xin hứa sẽ nghiêm túc sửa chữa khuyết điểm. Nếu tái phạm, em xin chịu mọi hình thức kỷ luật của nhà trường và lớp học.</div>
+                  </div>
+                  <div className="grid grid-cols-3 text-center pt-6">
+                    <div><strong>Ý KIẾN PHỤ HUYNH</strong><div className="mt-14">(Ký, ghi rõ họ tên)</div></div>
+                    <div><strong>GIÁO VIÊN CHỦ NHIỆM</strong><div className="mt-14">{teacherName}</div></div>
+                    <div><strong>HỌC SINH CAM KẾT</strong><div className="mt-14">{stu.name}</div></div>
+                  </div>
+                </div>
+              ))
+            ) : (
+              /* MẪU IN PHIẾU CHUYÊN CẦN TUẦN (CN -> T7) HOẶC BẢNG ĐIỂM A4 */
+              studentsToPrint.map((stu, idx) => {
+                const weekCond = calculateWeeklyConductScore(stu.id, selectedWeek);
+                const gpaSem = getStudentOverallGPA(stu.id, 'SEMESTER');
+                return (
+                  <div key={stu.id} className={`max-w-3xl mx-auto text-[11px] space-y-3 ${idx < studentsToPrint.length - 1 ? 'page-break' : ''}`}>
+                    <div className="flex justify-between border-b-2 border-[#1B3B48] pb-2">
+                      <div>
+                        <div className="font-bold uppercase">{schoolName}</div>
+                        <div>Lớp: <strong>{currentClassObj.name}</strong> • {semester} ({schoolYear})</div>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-bold uppercase">
+                          {printReportType === 'GRADES' ? 'PHIẾU KẾT QUẢ HỌC TẬP' : `PHIẾU CHUYÊN CẦN TUẦN ${selectedWeek}`}
+                        </div>
+                        <div>{currentWeekInfo.dateRange}</div>
+                      </div>
+                    </div>
+                    <div className="border border-[#1B3B48] p-2 bg-[#F7F6F2] flex justify-between">
+                      <span>Học sinh: <strong>{stu.name}</strong></span>
+                      <span>Mã Bộ: <strong>{stu.moetId || stu.id}</strong></span>
+                      <span>Chế độ HP: <strong>{stu.tuitionStatus || 'Đóng đủ'}</strong></span>
+                    </div>
+
+                    {printReportType === 'GRADES' ? (
+                      <table className="w-full border-collapse border border-[#1B3B48]">
+                        <thead>
+                          <tr className="bg-[#1B3B48] text-white">
+                            <th className="p-1.5 text-left">Môn học</th>
+                            <th className="p-1.5 text-center">TX1</th>
+                            <th className="p-1.5 text-center">TX2</th>
+                            <th className="p-1.5 text-center">GK</th>
+                            <th className="p-1.5 text-center">CK</th>
+                            <th className="p-1.5 text-center">ĐTB {semester}</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {currentSubjects.map((subj) => {
+                            const sc = getStudentSubjectScoreObj(stu.id, subj, semester);
+                            return (
+                              <tr key={subj}>
+                                <td className="p-1.5 font-bold">{subj}</td>
+                                <td className="p-1.5 text-center">{sc.tx1 || '-'}</td>
+                                <td className="p-1.5 text-center">{sc.tx2 || '-'}</td>
+                                <td className="p-1.5 text-center">{sc.gk || '-'}</td>
+                                <td className="p-1.5 text-center">{sc.ck || '-'}</td>
+                                <td className="p-1.5 text-center font-bold">{calculateSubjectAverage(sc) ?? '-'}</td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    ) : (
+                      <table className="w-full border-collapse border border-[#1B3B48]">
+                        <thead>
+                          <tr className="bg-[#1B3B48] text-white">
+                            <th className="p-1.5 text-center w-28">Thứ / Ngày</th>
+                            <th className="p-1.5 text-left">Buổi Sáng</th>
+                            <th className="p-1.5 text-left">Buổi Chiều</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {DAYS_OF_WEEK.map((d) => {
+                            const m = getStudentDaySessionCodes(stu.id, d.key, 'S', selectedWeek);
+                            const a = getStudentDaySessionCodes(stu.id, d.key, 'C', selectedWeek);
+                            return (
+                              <tr key={d.key}>
+                                <td className="p-1.5 text-center font-bold">{d.label} ({currentWeekInfo.days?.[d.key] || ''})</td>
+                                <td className="p-1.5">{m.length === 0 ? 'Có mặt đầy đủ' : m.join(', ')}</td>
+                                <td className="p-1.5">{a.length === 0 ? 'Có mặt đầy đủ' : a.join(', ')}</td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    )}
+
+                    <div className="font-bold">
+                      {printReportType === 'GRADES' ? `ĐTB Chung ${semester}: ${gpaSem ?? '--'}` : `Điểm rèn luyện Tuần ${selectedWeek}: ${weekCond.score}/100đ (${weekCond.rank})`}
+                    </div>
+                    <div className="grid grid-cols-2 text-center pt-4">
+                      <div><strong>CHỮ KÝ PHỤ HUYNH</strong><div className="mt-12">(Ký, ghi rõ họ tên)</div></div>
+                      <div><strong>GIÁO VIÊN CHỦ NHIỆM</strong><div className="mt-12">{teacherName} ({AUTH_CONFIG.subNote})</div></div>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
